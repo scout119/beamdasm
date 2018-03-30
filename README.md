@@ -1,5 +1,8 @@
 # BEAMdasm
 
+[![GitHub issues](https://img.shields.io/github/issues/stef-levesque/vscode-hexdump.svg)](https://github.com/stef-levesque/vscode-hexdump/issues)
+[![GitHub license button](https://img.shields.io/github/license/stef-levesque/vscode-hexdump.svg)](https://github.com/stef-levesque/vscode-hexdump/blob/master/LICENSE.md)
+
 BEAM files disassembler extension for Visual Studio Code
 
 ## Description
