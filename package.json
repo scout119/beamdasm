@@ -1,0 +1,86 @@
+{
+    "name": "beamdasm",
+    "displayName": "BEAMdasm",
+    "description": "BEAM file disassembler",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "version": "0.0.1",
+    "publisher": "Valentin",
+    "engines": {
+        "vscode": "^1.21.0"
+    },
+    "author": {
+        "name": "Valentin Ivanov"
+    },
+    "categories": [
+        "Languages",
+        "Other"
+    ],
+    "keywords": [
+        "beam",
+        "erlang",
+        "elixir",
+        "disassembler"
+    ],
+    "icon": "media/icon.png",
+    "galleryBanner": {
+        "color": "#1E1E1E",
+        "theme": "dark"
+    },
+    "preview": true,
+    "activationEvents": [
+        "onCommand:beamdasm.disassemble"
+    ],
+    "main": "./out/extension",
+    "contributes": {
+        "languages": [
+            {
+                "id": "beam",
+                "extensions": [
+                    ".beam"
+                ]
+            },
+            {
+                "id": "beamdasm",
+                "extensions": [
+                    ".beamdasm"
+                ]
+            }
+        ],
+        "grammars": [
+            {
+                "language": "beamdasm",
+                "scopeName": "source.beamdasm",
+                "path": "./syntaxes/beamdasm.tmLanguage.json"
+            }
+        ],
+        "commands": [
+            {
+                "when": "resourceLangId == beam",
+                "command": "beamdasm.disassemble",
+                "title": "Disassemble BEAM"
+            }            
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "when": "resourceLangId == beam",
+                    "command": "beamdasm.disassemble"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.6",
+        "tslint": "^5.8.0",
+        "@types/node": "^7.0.43",
+        "@types/mocha": "^2.2.42"
+    }
+}
