@@ -1,7 +1,8 @@
 # BEAMdasm
 
 [![GitHub issues](https://img.shields.io/github/issues/scout119/beamdasm.svg)](https://github.com/scout119/beamdasm/issues)
-[![GitHub license button](https://img.shields.io/github/license/scout119/beamdasm.svg)](https://github.com/scout119/beamdasm/blob/master/LICENSE.md)
+[![GitHub license](https://img.shields.io/github/license/scout119/beamdasm.svg)](https://github.com/scout119/beamdasm/blob/master/LICENSE.md)
+[![VS Code marketplace](https://vsmarketplacebadge.apphb.com/installs/Valentin.beamdasm.svg)](https://marketplace.visualstudio.com/items?itemName=Valentin.beamdasm)
 
 BEAM files disassembler extension for Visual Studio Code
 
