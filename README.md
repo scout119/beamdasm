@@ -1,5 +1,7 @@
 # BEAMdasm
 
+[![Join the chat at https://gitter.im/beamdasm/Lobby](https://badges.gitter.im/beamdasm/Lobby.svg)](https://gitter.im/beamdasm/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![GitHub issues](https://img.shields.io/github/issues/scout119/beamdasm.svg)](https://github.com/scout119/beamdasm/issues)
 [![GitHub license](https://img.shields.io/github/license/scout119/beamdasm.svg)](https://github.com/scout119/beamdasm/blob/master/LICENSE.md)
 [![VS Code marketplace](https://vsmarketplacebadge.apphb.com/installs/Valentin.beamdasm.svg)](https://marketplace.visualstudio.com/items?itemName=Valentin.beamdasm)
