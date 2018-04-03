@@ -18,7 +18,7 @@ import BeamFile from './beam/beamFile';
 import { opcodes } from './beam/opcodes';
 import * as tags from './beam/tags';
 
-let lbl: any;
+let lbl: (val: number) => string;
 
 export function formatCode(bm: BeamFile): string {
 
@@ -45,17 +45,12 @@ export function formatCode(bm: BeamFile): string {
   for (let i = 0; i < bm._code.length; i++) {
     let obj = bm._code[i];
 
-    if (obj.op === 1) {
-      label = obj;
-      continue;
-    } else if (obj.op === 153) {
-      line = obj;
-      continue;
+    if( obj.op === 2){      
+      str += `\n//Function  ${bm._atoms[obj.params[0].data]}:${bm._atoms[obj.params[1].data]}/${obj.params[2].data}\n`;
     }
 
-    if (label) {
-      str += `label${lbl(label.params[0].data)}:`;
-      label = null;
+    if (obj.label) {
+      str += `label${lbl(obj.label[0].data)}:`;
     } else {
       str += ' '.repeat(lblLength + 6);
     }
@@ -83,18 +78,15 @@ export function formatCode(bm: BeamFile): string {
       str += instructionToString(bm, obj, -1);
     }
 
-    if (line) {
+    if (obj.line) {
       //skip zero lines
-      if (line.params[0].data !== 0) {
-        let line_ref = bm._line_refs[line.params[0].data];
+      //if (obj.line[0].data !== 0) {
+        let line_ref = bm._line_refs[obj.line[0].data];
         str += ` //line ${bm._line_fnames[line_ref[0]]}, ${line_ref[1]}`;
-      }
-
-      line = null;
+      //}
     }
 
     str += '\n';
-
   }
   return str;
 }

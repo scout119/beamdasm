@@ -54,78 +54,97 @@ export default class BeamFile {
   readBeamFile(filePath: string) {
     let buffer: Buffer = fs.readFileSync(filePath);
 
-    let for1 = buffer.toString('utf8', 0, 4);
+    let for1 = buffer.toString('utf8', 0, 4).toLowerCase();
 
-    if (for1 !== "FOR1") {
+    if (for1 !== "for1") {
       throw Error("Not a valid BEAM binary");
     }
 
     let length = buffer.readUInt32BE(4);
 
-    let beam = buffer.toString('utf8', 8, 12);
+    let beam = buffer.toString('utf8', 8, 12).toLowerCase();
 
-    if (beam !== "BEAM") {
+    if (beam !== "beam") {
       throw Error("Not a valid BEAM binary");
     }
 
     let offset = 12;
 
-    while (offset < length) {
-      var chunkName = buffer.toString('utf8', offset, offset + 4);
-      offset += 4;
-      var chunkLength = buffer.readUInt32BE(offset);
-      var chunkStart = offset + 4;
+    let chunks : any = {};
+    //Quick scan to get chunks offsets and sizes
+    //We want to read them in particular order, not the order
+    //chunks are present in the file
+    while ( offset < length )
+    {
+      let name = buffer.toString('utf8', offset, offset+4);
+      let size = buffer.readUInt32BE(offset+4);
 
-      switch (chunkName) {
-        case 'AtU8':
-          this.readAttomsChunk(buffer, chunkStart);
-          break;
-        case 'Code':
-          this.readCodeChunk(buffer, chunkStart, chunkLength);
-          break;
-        case 'ImpT':
-          this.readImportChunk(buffer, chunkStart);
-          break;
-        case 'ExpT':
-          this.readExportChunk(buffer, chunkStart);
-          break;
-        case 'FunT':
-          this.readFunctionChunk(buffer, chunkStart);
-          break;
-        case 'LocT':
-          this.readLocalChunk(buffer, chunkStart);
-          break;
-        case 'StrT':
-          this.readStringChunk(buffer, chunkStart, chunkLength);
-          break;
-        case 'CInf':
-          this.readCompilationInfoChunk(buffer, chunkStart);
-          break;
-        case 'Attr':
-          this.readAttributesChunk(buffer, chunkStart);
-          break;
-        case 'LitT':
-          this.readLiteralsChunk(buffer, chunkStart, chunkLength);
-          break;
-        case 'Line':
-          this.readLineChunk(buffer, chunkStart);
-          break;
-        case 'ExDc':
-          //this.readExDcChunk(buffer, chunkStart, chunkLength);
-          break;
-        case 'ExDp':
-          //this.readExDpChunk(buffer, chunkStart);
-          break;
-        case 'Dbgi':
-          //this.readDbgiChunk(buffer, chunkStart, chunkLength);
-          break;
-        default:
-          console.log(`Reading chunk: ${chunkName}(${chunkLength} bytes) is not implemented.`);
-          break;
-      }
+      chunks[name.toLowerCase()] = {start: offset + 8, length: size};
 
-      var nextChunk = ((chunkLength + 3) >> 2) << 2;
-      offset = chunkStart + nextChunk;
+      offset = offset + 8 + (((size + 3)>>2)<<2);
+      console.log(name);
+    }
+
+    this._atoms = ['nil'];
+
+    if( 'atu8' in chunks ){
+      this.readAttomsChunk(buffer, chunks['atu8'].start, true);
+    }
+
+    if( 'atom' in chunks ){
+      this.readAttomsChunk(buffer, chunks['atom'].start, false);
+    }
+
+    if( 'impt' in chunks ){      
+      this.readImportChunk(buffer, chunks['impt'].start);
+    }
+
+    if( 'expt' in chunks ){
+      this.readExportChunk(buffer, chunks['expt'].start);
+    }
+
+    if( 'funt' in chunks ){
+      this.readFunctionChunk(buffer, chunks['funt'].start);
+    }
+
+    if( 'loct' in chunks ){
+      this.readLocalChunk(buffer, chunks['loct'].start);
+    }
+
+    if( 'strt' in chunks ){
+      this.readStringChunk(buffer, chunks['strt'].start, chunks['strt'].length);
+    }
+
+    if( 'cinf' in chunks ){
+      this.readCompilationInfoChunk(buffer, chunks['cinf'].start);
+    }
+
+    if( 'attr' in chunks ){
+      this.readAttributesChunk(buffer, chunks['attr'].start);
+    }
+
+    if( 'litt' in chunks ){
+      this.readLiteralsChunk(buffer, chunks['litt'].start, chunks['litt'].length);
+    }
+
+    if( 'line' in chunks ) {
+      this.readLineChunk(buffer, chunks['line'].start);
+    }
+
+    // if( 'exdc' in chunks ) {
+    //   this.readExDcChunk(buffer, chunks['exdc'].start, chunks['exdc'].length);
+    // }
+
+    // if( 'exdp' in chunks ) {
+    //   this.readExDpChunk(buffer, chunks['exdp'].start);
+    // }
+
+    // if( 'dbgi' in chunks ) {
+    //   this.readDbgiChunk(buffer, chunks['dbgi'].start, chunks['dbgi'].length);
+    // }
+
+    if( 'code' in chunks ){
+      this.readCodeChunk(buffer, chunks['code'].start, chunks['code'].length);
     }
   }
 
@@ -326,15 +345,14 @@ export default class BeamFile {
     this.readBeamVmCode(buffer, offset, length - 20);
   }
 
-  readAttomsChunk(buffer: Buffer, offset: number) {
-    this._atoms = ["nil"];
+  readAttomsChunk(buffer: Buffer, offset: number, utf: boolean) {
 
     let nAtoms = buffer.readUInt32BE(offset);
     offset += 4;
 
     while (nAtoms-- > 0) {
       let atomLength = buffer.readUInt8(offset);
-      let atom = buffer.toString('utf8', offset + 1, offset + 1 + atomLength);
+      let atom = buffer.toString(utf ? 'utf8' : 'latin1', offset + 1, offset + 1 + atomLength);
       offset = offset + 1 + atomLength;
       this._atoms.push(atom);
     }
@@ -445,21 +463,23 @@ export default class BeamFile {
     return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
   }
 
+  readonly hex: (d:number) => string = (d: number) => ("0" + d.toString(16)).slice(-2).toUpperCase();
+
   readSmallBigNum(buffer: Buffer, offset: number): any {
-    const hex = (d: number) => ("0" + d.toString(16)).slice(-2).toUpperCase();
     let length = buffer.readUInt8(offset++);
     let sign = buffer.readUInt8(offset++);
 
     let result = sign === 0 ? "" : "-" + "0x";
 
     for (let i = 0; i < length; i++) {
-      result += hex(buffer.readUInt8(offset + i));
+      result += this.hex(buffer.readUInt8(offset + i));
     }
 
     return { data: result, offse: offset + length };
   }
 
   readTag(value: number): number {
+    //TODO: Get otp20 from file, somewhere?
     let otp20 = true;
     let index = value & 0x07;
 
@@ -468,7 +488,7 @@ export default class BeamFile {
     }
 
     if (index > 11) {
-      return tags.TAG_UNKNOWN;
+      index = tags.TAG_UNKNOWN;
     }
 
     return index;
@@ -603,8 +623,10 @@ export default class BeamFile {
     return { tag: tag, data: "", offset: sizeObject.offset };
   }
 
-
   readBeamVmCode(buffer: Buffer, offset: number, length: number) {
+
+    let line = null;
+    let label = null;
 
     length = offset + length;
     while (offset < length) {
@@ -613,6 +635,7 @@ export default class BeamFile {
       if (byteCode > 163) {
         console.log(`Illegal opcode ${byteCode}`);
       }
+      
 
       // if( byteCode === 125 ){
       //   console.log('fdiv');
@@ -624,7 +647,20 @@ export default class BeamFile {
         offset = obj.offset;
         list.push(obj);
       }
-      this._code.push({ op: byteCode, params: list });
+
+      if( byteCode === 1){
+        label = list;
+        continue;
+      }
+
+      if( byteCode === 153 ){
+        line = list;
+        continue;
+      }
+      
+      this._code.push({ op: byteCode, params: list, label: label, line: line });
+      line = null;
+      label = null;
     }
   }
 }
