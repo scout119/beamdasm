@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('beamdasm.disassemble', (fileUri) => {
+        vscode.commands.registerCommand('beamdasm.disassemble', (fileUri, beamFile?:any) => {
             if (!fileUri || !(fileUri instanceof vscode.Uri)) {
                 let editor = vscode.window.activeTextEditor;
 
@@ -50,7 +50,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             let beamDasmDocument = vscode.Uri.file(fileUri.fsPath.replace(".beam", ".beamdasm"));
-            vscode.commands.executeCommand('vscode.open', beamDasmDocument.with({ scheme: 'beamdasm' }));
+            vscode.commands.executeCommand('vscode.open',  beamDasmDocument.with({ scheme: 'beamdasm' }));
         }
         )
     );

@@ -39,6 +39,7 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
 
     //TODO: Introduce configurable formatter to have different ways to show
     //      disassembler code. similar to ILDASM, erlang .S style, etc.
-    return formatCode(bm);
+    let content = formatCode(bm);
+    return content.str;
   }
 }

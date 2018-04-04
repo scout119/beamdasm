@@ -18,7 +18,7 @@ export const opcodes: any = {
   1:    { 
     ar: 1, 
     nm: 'label',
-    doc: '**label* *Lbl*\nSpecify a module local label. Label gives this code address a name *Lbl* and marks the start of a basic block.' 
+    doc: '**label** *Lbl*\nSpecify a module local label. Label gives this code address a name *Lbl* and marks the start of a basic block.' 
   },
   2:    { 
     ar: 3, 

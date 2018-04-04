@@ -20,7 +20,7 @@ import * as tags from './beam/tags';
 
 let lbl: (val: number) => string;
 
-export function formatCode(bm: BeamFile): string {
+export function formatCode(bm: BeamFile): any {
 
   let str = '';
 
@@ -83,7 +83,7 @@ export function formatCode(bm: BeamFile): string {
 
     str += '\n';
   }
-  return str;
+  return { str: str} ;
 }
 
 function instructionToString(bm: BeamFile, obj: any, func: number): string {

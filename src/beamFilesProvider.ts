@@ -10,6 +10,19 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
   onDidChangeTreeData?: vscode.Event<vscode.TreeItem> | undefined;
 
   constructor(private workspaceRoot: string | undefined) {
+
+    if( workspaceRoot && fs.existsSync(workspaceRoot) ){
+      //Watcher is not 100% consistent on all platforms 
+      fs.watch(workspaceRoot, {recursive: true}, (event: string, filename: string | Buffer) => {
+        let file = ( filename instanceof Buffer ) ? filename.toString() : filename;
+
+        if( path.extname(file) === ".beam" ){
+          console.log(`${event} happend to ${filename}`);
+        }
+        return undefined;
+      });
+    }
+
   }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -54,7 +67,6 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
             beamFiles.map<BeamFileItem>(
               (item: any, index: number, array: any[]) => {
                 return new BeamFileItem(item.name,
-                  vscode.TreeItemCollapsibleState.Collapsed,
                   item.location
                 );
               }
@@ -66,10 +78,10 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
       if (fs.existsSync(element.filePath)) {
         let bm = BeamFile.fromFile(element.filePath);
         if ('impt' in bm._chunks) {
-          let item = new vscode.TreeItem("ImptT", vscode.TreeItemCollapsibleState.None);
+          let item = new BeamChunkItem("ImptT");
           item.iconPath = {
-            light: path.join(__filename, '..','..', 'resources', 'light', 'code.svg'),
-            dark: path.join(__filename, '..', '..', 'resources', 'dark', 'code.svg')
+            light: path.join(__filename, '..','..', 'resources', 'light', 'atom.svg'),
+            dark: path.join(__filename, '..', '..', 'resources', 'dark', 'atom.svg')
           };
 
           return Promise.resolve(
@@ -90,11 +102,10 @@ class BeamFileItem extends vscode.TreeItem {
 
   elixir:boolean = false;
 
-  constructor(public readonly label: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
+  constructor(public readonly label: string,    
     public readonly filePath: string
   ) {
-    super(label, collapsibleState);
+    super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
     if( label.startsWith('Elixir.') ){
       this.elixir = true;    
@@ -104,8 +115,6 @@ class BeamFileItem extends vscode.TreeItem {
       light: path.join(__filename, '..','..', 'resources', this.elixir ? 'elixir.svg' : 'erlang.svg'),
       dark: path.join(__filename, '..', '..', 'resources', this.elixir ? 'elixir.svg' : 'erlang.svg')
     };
-
-    console.log(this.iconPath);
   }
 
   get tooltip(): string {
@@ -116,7 +125,13 @@ class BeamFileItem extends vscode.TreeItem {
 
   command = {
     command: "beamdasm.disassemble",
-    arguments: [vscode.Uri.file(this.filePath)],
+    arguments: [vscode.Uri.file(this.filePath), this],
     title: 'Open BEAM'
   };  
+}
+
+class BeamChunkItem extends vscode.TreeItem {
+  constructor(public readonly label: string){
+    super(label,vscode.TreeItemCollapsibleState.None);
+  }
 }
