@@ -31,7 +31,7 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
     
     let beamFile : string = uri.fsPath.replace(".beamdasm", ".beam");
 
-    if( !(fs.existsSync(beamFile)) ){
+    if( !fs.existsSync(beamFile) ){
       return;
     }
 

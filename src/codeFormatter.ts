@@ -26,7 +26,7 @@ export function formatCode(bm: BeamFile): string {
 
   let lblLength = bm._codeNumberOfLabels.toString().length;
   lblLength = lblLength < 2 ? 2 : lblLength;
-  lbl = (val: number) => ("0".repeat(lblLength) + val.toString()).slice(-lblLength);
+  lbl = (val: number) => `label${("0".repeat(lblLength) + val.toString()).slice(-lblLength)}`;
 
   str += printModuleInfo(bm);
   str += printLiteralsTable(bm);
@@ -36,12 +36,6 @@ export function formatCode(bm: BeamFile): string {
   str += printLocalTable(bm);
   str += printStringTable(bm);
 
-
-
-  let label = null;
-  let line = null;
-
-
   for (let i = 0; i < bm._code.length; i++) {
     let obj = bm._code[i];
 
@@ -50,8 +44,9 @@ export function formatCode(bm: BeamFile): string {
     }
 
     if (obj.label) {
-      str += `label${lbl(obj.label[0].data)}:`;
+      str += `${lbl(obj.label[0].data)}:`;
     } else {
+      //6 === 'label:'.length
       str += ' '.repeat(lblLength + 6);
     }
 
@@ -109,7 +104,7 @@ function instructionToString(bm: BeamFile, obj: any, func: number): string {
 
 function termToString(bm: BeamFile, obj: any): string {
   if (obj.tag === tags.TAG_LABEL) {
-    return `label${lbl(obj.data)}`;
+    return lbl(obj.data);
   }
   if (obj.tag === tags.TAG_X_REGISTER) {
     return `X[${obj.data}]`;
@@ -198,7 +193,7 @@ function printExportTable(bm: BeamFile): string {
   for (let i = 0; i < bm._exports.length; i++) {
     let func_info = bm._exports[i];
     str += (i !== 0) ? ' '.repeat(offset) : '';
-    str += `${func_info.function}/${func_info.arity}/${func_info.label} ${bm._atoms[func_info.function]}/${func_info.arity} label${lbl(func_info.label)}\n`;
+    str += `${func_info.function}/${func_info.arity}/${func_info.label} ${bm._atoms[func_info.function]}/${func_info.arity} ${lbl(func_info.label)}\n`;
   }
   str += '\n';
   return str;
@@ -212,7 +207,7 @@ function printLocalTable(bm: BeamFile): string {
   {
     let func_info = bm._locals[i];
     str += (i !== 0) ? ' '.repeat(offset) : '';    
-    str += `${func_info.function}/${func_info.arity}/${func_info.label} ${bm._atoms[func_info.function]}/${func_info.arity} label${lbl(func_info.label)}\n`;
+    str += `${func_info.function}/${func_info.arity}/${func_info.label} ${bm._atoms[func_info.function]}/${func_info.arity} ${lbl(func_info.label)}\n`;
   }
   str += '\n';
   return str;

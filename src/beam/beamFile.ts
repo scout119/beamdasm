@@ -51,6 +51,8 @@ export default class BeamFile {
     return beamFile;
   }
 
+  _chunks:any = {};
+
   readBeamFile(filePath: string) {
     let buffer: Buffer = fs.readFileSync(filePath);
 
@@ -70,7 +72,7 @@ export default class BeamFile {
 
     let offset = 12;
 
-    let chunks : any = {};
+    this._chunks ={};
     //Quick scan to get chunks offsets and sizes
     //We want to read them in particular order, not the order
     //chunks are present in the file
@@ -79,72 +81,71 @@ export default class BeamFile {
       let name = buffer.toString('utf8', offset, offset+4);
       let size = buffer.readUInt32BE(offset+4);
 
-      chunks[name.toLowerCase()] = {start: offset + 8, length: size};
+      this._chunks[name.toLowerCase()] = {start: offset + 8, length: size};
 
       offset = offset + 8 + (((size + 3)>>2)<<2);
-      console.log(name);
     }
 
     this._atoms = ['nil'];
 
-    if( 'atu8' in chunks ){
-      this.readAttomsChunk(buffer, chunks['atu8'].start, true);
+    if( 'atu8' in this._chunks ){
+      this.readAttomsChunk(buffer, this._chunks['atu8'].start, true);
     }
 
-    if( 'atom' in chunks ){
-      this.readAttomsChunk(buffer, chunks['atom'].start, false);
+    if( 'atom' in this._chunks ){
+      this.readAttomsChunk(buffer, this._chunks['atom'].start, false);
     }
 
-    if( 'impt' in chunks ){      
-      this.readImportChunk(buffer, chunks['impt'].start);
+    if( 'impt' in this._chunks ){      
+      this.readImportChunk(buffer, this._chunks['impt'].start);
     }
 
-    if( 'expt' in chunks ){
-      this.readExportChunk(buffer, chunks['expt'].start);
+    if( 'expt' in this._chunks ){
+      this.readExportChunk(buffer, this._chunks['expt'].start);
     }
 
-    if( 'funt' in chunks ){
-      this.readFunctionChunk(buffer, chunks['funt'].start);
+    if( 'funt' in this._chunks ){
+      this.readFunctionChunk(buffer, this._chunks['funt'].start);
     }
 
-    if( 'loct' in chunks ){
-      this.readLocalChunk(buffer, chunks['loct'].start);
+    if( 'loct' in this._chunks ){
+      this.readLocalChunk(buffer, this._chunks['loct'].start);
     }
 
-    if( 'strt' in chunks ){
-      this.readStringChunk(buffer, chunks['strt'].start, chunks['strt'].length);
+    if( 'strt' in this._chunks ){
+      this.readStringChunk(buffer, this._chunks['strt'].start, this._chunks['strt'].length);
     }
 
-    if( 'cinf' in chunks ){
-      this.readCompilationInfoChunk(buffer, chunks['cinf'].start);
+    if( 'cinf' in this._chunks ){
+      this.readCompilationInfoChunk(buffer, this._chunks['cinf'].start);
     }
 
-    if( 'attr' in chunks ){
-      this.readAttributesChunk(buffer, chunks['attr'].start);
+    if( 'attr' in this._chunks ){
+      this.readAttributesChunk(buffer, this._chunks['attr'].start);
     }
 
-    if( 'litt' in chunks ){
-      this.readLiteralsChunk(buffer, chunks['litt'].start, chunks['litt'].length);
+    if( 'litt' in this._chunks ){
+      this.readLiteralsChunk(buffer, this._chunks['litt'].start, this._chunks['litt'].length);
     }
 
-    if( 'line' in chunks ) {
-      this.readLineChunk(buffer, chunks['line'].start);
+    if( 'line' in this._chunks ) {
+      this.readLineChunk(buffer, this._chunks['line'].start);
     }
 
-    // if( 'exdc' in chunks ) {
-    //   this.readExDcChunk(buffer, chunks['exdc'].start, chunks['exdc'].length);
+    // if( 'exdc' in this._chunks ) {
+    //   this.readExDcChunk(buffer, this._chunks['exdc'].start, this._chunks['exdc'].length);
     // }
 
-    // if( 'exdp' in chunks ) {
-    //   this.readExDpChunk(buffer, chunks['exdp'].start);
+    // if( 'exdp' in this._chunks ) {
+    //   this.readExDpChunk(buffer, this._chunks['exdp'].start);
     // }
 
-    // if( 'dbgi' in chunks ) {
-    //   this.readDbgiChunk(buffer, chunks['dbgi'].start, chunks['dbgi'].length);
+    // if( 'dbgi' in this._chunks ) {
+    //   this.readDbgiChunk(buffer, this._chunks['dbgi'].start, this._chunks['dbgi'].length);
     // }
 
-    if( 'code' in chunks ){
-      this.readCodeChunk(buffer, chunks['code'].start, chunks['code'].length);
+    if( 'code' in this._chunks ){
+      this.readCodeChunk(buffer, this._chunks['code'].start, this._chunks['code'].length);
     }
   }
 
@@ -362,6 +363,9 @@ export default class BeamFile {
   readObject(tag: number, buffer: Buffer, offset: number): any {
 
     switch (tag) {
+      case 70: {
+        return { data: "float8bytes", offset: offset + 8};
+      }
       case 97:
         return { data: buffer.readUInt8(offset), offset: offset + 1 };
       case 98:

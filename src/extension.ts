@@ -18,13 +18,16 @@ import * as vscode from 'vscode';
 
 import BeamDasmContentProvider from './contentProvider';
 import BeamDasmHoverProvider from './hoverProvider';
+import BeamFilesProvider from './beamFilesProvider';
 
 export function activate(context: vscode.ExtensionContext) {
 
+    const rootPath = vscode.workspace.rootPath;
+
     vscode.languages.registerHoverProvider("beamdasm", new BeamDasmHoverProvider());
     vscode.workspace.registerTextDocumentContentProvider("beamdasm", new BeamDasmContentProvider());
-    //vscode.languages.registerHoverProvider("beam", new BeamDasmHoverProvider());
-    //vscode.workspace.registerTextDocumentContentProvider("beam", new BeamDasmContentProvider());
+
+    vscode.window.registerTreeDataProvider("beamFiles", new BeamFilesProvider(rootPath));
 
     
     context.subscriptions.push(vscode.commands.registerCommand('beamdasm.disassemble', (fileUri) => {

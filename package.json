@@ -28,7 +28,8 @@
     },
     "preview": true,
     "activationEvents": [
-        "onCommand:beamdasm.disassemble"
+        "onCommand:beamdasm.disassemble",
+        "onView:beamFiles"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -58,8 +59,16 @@
                 "when": "resourceLangId == beam",
                 "command": "beamdasm.disassemble",
                 "title": "Disassemble BEAM"
-            }            
+            }
         ],
+        "views": {
+            "explorer": [
+                {
+                    "id": "beamFiles",
+                    "name": "BEAM files"
+                }
+            ]
+        },
         "menus": {
             "explorer/context": [
                 {
