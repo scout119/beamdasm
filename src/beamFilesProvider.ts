@@ -17,10 +17,11 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
   constructor(private workspaceRoot: string | undefined) {
 
     if (workspaceRoot && fs.existsSync(workspaceRoot)) {
-      //Watcher is not 100% consistent on all platforms 
+      //Watcher is not 100% consistent on all platforms     
       fs.watch(workspaceRoot, { recursive: true }, (event: string, filename: string | Buffer) => {
         let file = (filename instanceof Buffer) ? filename.toString() : filename;
 
+        //TODO: add code to refresh tree items that has been changed
         if (path.extname(file) === ".beam") {
           console.log(`${event} happend to ${filename}`);
         }
@@ -46,7 +47,7 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
 
     return new Promise(resolve => {
 
-      let final: vscode.TreeItem[] | undefined;
+      let final: vscode.TreeItem[] = [];
 
       if (!element) {        
         let beamFiles: any[] = [];
@@ -94,16 +95,39 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
           ));
       } else if (element instanceof BeamFileItem) {
         if (fs.existsSync(element.filePath)) {
+          
           let bm = BeamFile.fromFile(element.filePath);
-          if ('impt' in bm._chunks) {
-            let item = new BeamChunkItem("ImptT");
+
+          if ('atu8' in bm._chunks || 'atom' in bm._chunks ) {
+            let item = new BeamChunkItem("Atoms");
             item.iconPath = {
               light: path.join(__filename, '..', '..', 'resources', 'light', 'atom.svg'),
               dark: path.join(__filename, '..', '..', 'resources', 'dark', 'atom.svg')
             };
 
-            final = [item];
+            final.push(item);            
           }
+
+          if ('impt' in bm._chunks  ) {
+            let item = new BeamChunkItem("Imports");
+            item.iconPath = {
+              light: path.join(__filename, '..', '..', 'resources', 'light', 'func.svg'),
+              dark: path.join(__filename, '..', '..', 'resources', 'dark', 'func.svg')
+            };
+
+            final.push(item);            
+          }
+
+          if ('expt' in bm._chunks  ) {
+            let item = new BeamChunkItem("Exports");
+            item.iconPath = {
+              light: path.join(__filename, '..', '..', 'resources', 'light', 'func.svg'),
+              dark: path.join(__filename, '..', '..', 'resources', 'dark', 'func.svg')
+            };
+
+            final.push(item);            
+          }
+          
         }
       } else if (element instanceof BeamVirtualFolder) {
         final = element.items;

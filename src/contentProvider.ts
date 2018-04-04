@@ -16,6 +16,7 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as path from 'path';
 import BeamFile from './beam/beamFile';
 
 
@@ -36,6 +37,17 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
     }
 
     let bm = BeamFile.fromFile(beamFile);
+
+
+    const largeNumberDecorationType = vscode.window.createTextEditorDecorationType({
+      light: {
+        gutterIconPath: path.join(__filename,'..','..' , 'resources', 'light', 'func.svg')
+      },
+      dark: {
+        gutterIconPath: path.join(__filename,'..','..','resources','dark','func.svg')
+      },
+      gutterIconSize: "16px",
+    });
 
     //TODO: Introduce configurable formatter to have different ways to show
     //      disassembler code. similar to ILDASM, erlang .S style, etc.
