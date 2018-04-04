@@ -24,28 +24,38 @@ export function activate(context: vscode.ExtensionContext) {
 
     const rootPath = vscode.workspace.rootPath;
 
-    vscode.languages.registerHoverProvider("beamdasm", new BeamDasmHoverProvider());
-    vscode.workspace.registerTextDocumentContentProvider("beamdasm", new BeamDasmContentProvider());
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider("beamdasm", new BeamDasmHoverProvider())
+    );
 
-    vscode.window.registerTreeDataProvider("beamFiles", new BeamFilesProvider(rootPath));
+    context.subscriptions.push(
+        vscode.workspace.registerTextDocumentContentProvider("beamdasm", new BeamDasmContentProvider())
+    );
 
-    
-    context.subscriptions.push(vscode.commands.registerCommand('beamdasm.disassemble', (fileUri) => {
-                      
-        if( !fileUri || !(fileUri instanceof vscode.Uri)) {
-            let editor = vscode.window.activeTextEditor;
+    context.subscriptions.push(
+        vscode.window.registerTreeDataProvider("beamFiles", new BeamFilesProvider(rootPath))
+    );
 
-            if (!editor) {
-                return;
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('beamdasm.disassemble', (fileUri) => {
+            if (!fileUri || !(fileUri instanceof vscode.Uri)) {
+                let editor = vscode.window.activeTextEditor;
+
+                if (!editor) {
+                    return;
+                }
+
+                fileUri = editor.document.uri;
             }
-                
-            fileUri = editor.document.uri;
-        }        
 
-        let beamDasmDocument = vscode.Uri.file(fileUri.fsPath.replace(".beam",".beamdasm"));
-        vscode.commands.executeCommand('vscode.open', beamDasmDocument.with( {scheme: 'beamdasm'} ));
-    }));
+            let beamDasmDocument = vscode.Uri.file(fileUri.fsPath.replace(".beam", ".beamdasm"));
+            vscode.commands.executeCommand('vscode.open', beamDasmDocument.with({ scheme: 'beamdasm' }));
+        }
+        )
+    );
 }
 
 export function deactivate() {
+    console.log('BEAMdasm is disposed');
 }

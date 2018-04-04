@@ -45,6 +45,12 @@
                 "extensions": [
                     ".beamdasm"
                 ]
+            },
+            {
+                "id": "beamimpt",
+                "extensions": [
+                    ".beamimpt"
+                ]
             }
         ],
         "grammars": [

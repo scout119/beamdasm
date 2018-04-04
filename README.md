@@ -6,10 +6,11 @@
 [![Join the chat at https://gitter.im/scout119/beamdasm](https://badges.gitter.im/scout119/beamdasm.svg)](https://gitter.im/scout119/beamdasm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ![GitHub stars](https://img.shields.io/github/stars/scout119/beamdasm.svg?style=social&label=Stars)
 
-BEAM files disassembler extension for Visual Studio Code
+BEAM files disassembler extension for Visual Studio Code.
 
 ## Description
 
+Erlang\Elixir bytecode viewer.
 This extension allows to "peek" inside compiled bytecode for BEAM (Bogdan/Björn Erlang Abstract machine).
 
 ## Features

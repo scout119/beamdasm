@@ -132,6 +132,14 @@ export default class BeamFile {
       this.readLineChunk(buffer, this._chunks['line'].start);
     }
 
+    if( 'catt' in this._chunks ){
+      console.log('Found CatT chunk');
+    }
+
+    if( 'abst' in this._chunks ){
+      console.log('Found Abst chunk');
+    }
+
     // if( 'exdc' in this._chunks ) {
     //   this.readExDcChunk(buffer, this._chunks['exdc'].start, this._chunks['exdc'].length);
     // }

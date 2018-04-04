@@ -87,11 +87,25 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
 
 
 class BeamFileItem extends vscode.TreeItem {
+
+  elixir:boolean = false;
+
   constructor(public readonly label: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly filePath: string
   ) {
     super(label, collapsibleState);
+
+    if( label.startsWith('Elixir.') ){
+      this.elixir = true;    
+    }
+
+    this.iconPath = {
+      light: path.join(__filename, '..','..', 'resources', this.elixir ? 'elixir.svg' : 'erlang.svg'),
+      dark: path.join(__filename, '..', '..', 'resources', this.elixir ? 'elixir.svg' : 'erlang.svg')
+    };
+
+    console.log(this.iconPath);
   }
 
   get tooltip(): string {
@@ -104,5 +118,5 @@ class BeamFileItem extends vscode.TreeItem {
     command: "beamdasm.disassemble",
     arguments: [vscode.Uri.file(this.filePath)],
     title: 'Open BEAM'
-  };
+  };  
 }
