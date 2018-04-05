@@ -440,13 +440,13 @@ export default class BeamFile {
       let keyObj = this.readObject(keyTag, buffer, offset);
       offset = keyObj.offset;
 
-      console.log(`${keyObj.data}`);
+      //console.log(`${keyObj.data}`);
 
       let valTag = buffer.readUInt8(offset++);
       let valObj = this.readObject(valTag, buffer, offset);
       offset = valObj.offset;
 
-      console.log(`${valObj.data}`);
+      //console.log(`${valObj.data}`);
 
       //Add object to the map
     }

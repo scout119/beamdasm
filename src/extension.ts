@@ -20,6 +20,8 @@ import BeamDasmContentProvider from './contentProvider';
 import BeamDasmHoverProvider from './hoverProvider';
 import BeamFilesProvider from './beamFilesProvider';
 
+import * as fs from 'fs';
+
 export function activate(context: vscode.ExtensionContext) {
 
     const rootPath = vscode.workspace.rootPath;
@@ -32,13 +34,15 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.workspace.registerTextDocumentContentProvider("beamdasm", new BeamDasmContentProvider())
     );
 
-    context.subscriptions.push(
-        vscode.window.registerTreeDataProvider("beamFiles", new BeamFilesProvider(rootPath))
-    );
+    let beamFilesProvider = new BeamFilesProvider(rootPath);
+    let command = vscode.commands.registerCommand('beamdasm.refreshBeamTree', () => beamFilesProvider.refresh());
+    context.subscriptions.push(command);
+
+    context.subscriptions.push( vscode.window.registerTreeDataProvider("beamdasm.beamFilesTree", beamFilesProvider) );
 
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('beamdasm.disassemble', (fileUri, beamFile?:any) => {
+        vscode.commands.registerCommand('beamdasm.disassemble', (fileUri, beamFile?: any) => {
             if (!fileUri || !(fileUri instanceof vscode.Uri)) {
                 let editor = vscode.window.activeTextEditor;
 
@@ -49,8 +53,11 @@ export function activate(context: vscode.ExtensionContext) {
                 fileUri = editor.document.uri;
             }
 
-            let beamDasmDocument = vscode.Uri.file(fileUri.fsPath.replace(".beam", ".beamdasm"));
-            vscode.commands.executeCommand('vscode.open',  beamDasmDocument.with({ scheme: 'beamdasm' }));
+            if (fs.existsSync(fileUri.fsPath)) {
+
+                let beamDasmDocument = vscode.Uri.file(fileUri.fsPath.replace(".beam", ".beamdasm"));
+                vscode.commands.executeCommand('vscode.open', beamDasmDocument.with({ scheme: 'beamdasm' }));
+            }
         }
         )
     );

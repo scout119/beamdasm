@@ -28,8 +28,8 @@
     },
     "preview": true,
     "activationEvents": [
-        "onCommand:beamdasm.disassemble",
-        "onView:beamFiles"
+        "onView:beamdasm.beamFilesTree",
+        "onCommand:beamdasm.disassemble"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -65,12 +65,20 @@
                 "when": "resourceLangId == beam",
                 "command": "beamdasm.disassemble",
                 "title": "Disassemble BEAM"
+            },
+            {
+                "command": "beamdasm.refreshBeamTree",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
             }
         ],
         "views": {
             "explorer": [
                 {
-                    "id": "beamFiles",
+                    "id": "beamdasm.beamFilesTree",
                     "name": "BEAM files"
                 }
             ]
@@ -80,6 +88,13 @@
                 {
                     "when": "resourceLangId == beam",
                     "command": "beamdasm.disassemble"
+                }
+            ],
+            "view/title": [
+                {
+                    "when": "view == beamdasm.beamFilesTree",
+                    "command": "beamdasm.refreshBeamTree",
+                    "group": "navigation"
                 }
             ]
         }

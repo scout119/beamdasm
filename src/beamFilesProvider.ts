@@ -7,28 +7,61 @@ import BeamFile from './beam/beamFile';
 
 export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 
-  onDidChangeTreeData?: vscode.Event<vscode.TreeItem> | undefined;
+  private _didChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
+  readonly onDidChangeTreeData?: vscode.Event<vscode.TreeItem | undefined> = this._didChangeTreeData.event;
 
   dev: BeamVirtualFolder = new BeamVirtualFolder('dev');
   prod: BeamVirtualFolder = new BeamVirtualFolder('prod');
   deps: BeamVirtualFolder = new BeamVirtualFolder('deps');
 
-
+  private watcher : vscode.FileSystemWatcher;
+  
   constructor(private workspaceRoot: string | undefined) {
 
+    this.watcher = vscode.workspace.createFileSystemWatcher('**/*.{beam}');
+
+    this.watcher.onDidChange( (e:vscode.Uri) => {
+      triggerUpdateTree();
+    });
+
+    this.watcher.onDidCreate( (e:vscode.Uri) => {
+      triggerUpdateTree();
+    });
+    
+    this.watcher.onDidDelete( (e:vscode.Uri) => {
+      triggerUpdateTree();
+    });
+
+    //For some reason onDidDelete is not firing when file is deleted by not a user
     if (workspaceRoot && fs.existsSync(workspaceRoot)) {
       //Watcher is not 100% consistent on all platforms     
       fs.watch(workspaceRoot, { recursive: true }, (event: string, filename: string | Buffer) => {
         let file = (filename instanceof Buffer) ? filename.toString() : filename;
-
-        //TODO: add code to refresh tree items that has been changed
+        
         if (path.extname(file) === ".beam") {
-          console.log(`${event} happend to ${filename}`);
+          if( event === 'rename') {
+            triggerUpdateTree();
+          }
         }
         return undefined;
       });
     }
 
+    var timeout: any = null;
+    let provider = this;
+    function triggerUpdateTree() {
+      if( timeout ){
+        clearTimeout(timeout);
+      }
+
+      timeout = setTimeout(() => {
+        provider.refresh();
+      }, 500);
+    }
+  }
+
+  refresh(): void {   
+    this._didChangeTreeData.fire();
   }
 
   getTreeItem(element: vscode.TreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -42,6 +75,7 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
       return Promise.resolve([]);
     }
 
+  
     let provider = this;
     let root = this.workspaceRoot;
 
@@ -49,7 +83,12 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
 
       let final: vscode.TreeItem[] = [];
 
-      if (!element) {        
+      if (!element) {
+        
+        this.dev.items = [];
+        this.prod.items = [];
+        this.deps.items = [];
+
         let beamFiles: any[] = [];
         const isDirectory = (source: string) => fs.lstatSync(source).isDirectory();
         const getBeamFiles = (source: string, acc: any[]) => {
