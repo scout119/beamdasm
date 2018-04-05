@@ -21,6 +21,7 @@ import BeamDasmHoverProvider from './hoverProvider';
 import BeamFilesProvider from './beamFilesProvider';
 
 import * as fs from 'fs';
+import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -38,7 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
     let command = vscode.commands.registerCommand('beamdasm.refreshBeamTree', () => beamFilesProvider.refresh());
     context.subscriptions.push(command);
 
-    context.subscriptions.push( vscode.window.registerTreeDataProvider("beamdasm.beamFilesTree", beamFilesProvider) );
+    context.subscriptions.push(vscode.window.registerTreeDataProvider("beamdasm.beamFilesTree", beamFilesProvider));
 
 
     context.subscriptions.push(
@@ -61,6 +62,60 @@ export function activate(context: vscode.ExtensionContext) {
         }
         )
     );
+
+    setupDecorators();
+}
+
+function setupDecorators() {
+    const functionDecorationType = vscode.window.createTextEditorDecorationType({
+        light: {
+            gutterIconPath: path.join(__filename, '..', '..', 'resources', 'light', 'func.svg')
+        },
+        dark: {
+            gutterIconPath: path.join(__filename, '..', '..', 'resources', 'dark', 'func.svg')
+        },
+        gutterIconSize: "16px",
+    });
+
+    let timeout: any = null;
+    function triggerUpdateDecorations() {
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        timeout = setTimeout(updateDecorations, 500);
+    }
+
+    let activeEditor = vscode.window.activeTextEditor;
+    
+    if (activeEditor) {
+        triggerUpdateDecorations();
+    }
+
+    vscode.window.onDidChangeActiveTextEditor( editor => {
+        activeEditor = editor;
+        if( editor ){
+            triggerUpdateDecorations();
+        }
+    });
+
+    function updateDecorations() {
+        if (!activeEditor) {
+            return;
+        }
+
+        const regEx = /\/\/Function/g;
+        const text = activeEditor.document.getText();
+
+        const ranges: vscode.DecorationOptions[] = [];
+        let match: any;
+        while (match = regEx.exec(text)) {
+            const startPos = activeEditor.document.positionAt(match.index);
+            const endPos = activeEditor.document.positionAt(match.index + match[0].length);
+            const decoration = { range: new vscode.Range(startPos, endPos) };
+            ranges.push(decoration);
+        }
+        activeEditor.setDecorations(functionDecorationType, ranges);
+    }
 }
 
 export function deactivate() {
