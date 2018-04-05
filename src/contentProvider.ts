@@ -16,7 +16,6 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-//import * as path from 'path';
 import BeamFile from './beam/beamFile';
 
 
@@ -26,17 +25,11 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
 
   public provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
 
-    vscode.window.onDidChangeActiveTextEditor( (e: vscode.TextEditor|undefined) => {
-      if( e ){
-        console.log(`Editor activated ${e.document.fileName}`);
-      }
-    });
-    
     if( !uri || !(uri instanceof vscode.Uri)){
       return;
     }
     
-    let beamFile : string = uri.fsPath.replace(".beamdasm", ".beam");
+    let beamFile : string = uri.fsPath;//.replace(".beamdasm", ".beam");
 
     if( !fs.existsSync(beamFile) ){
       return;

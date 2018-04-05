@@ -55,9 +55,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             if (fs.existsSync(fileUri.fsPath)) {
-
-                let beamDasmDocument = vscode.Uri.file(fileUri.fsPath.replace(".beam", ".beamdasm"));
-                vscode.commands.executeCommand('vscode.open', beamDasmDocument.with({ scheme: 'beamdasm' }));
+                vscode.commands.executeCommand('vscode.open', fileUri.with({ scheme: 'beamdasm' }));
             }
         }
         )
@@ -100,6 +98,10 @@ function setupDecorators() {
 
     function updateDecorations() {
         if (!activeEditor) {
+            return;
+        }
+
+        if( activeEditor.document.uri.scheme !== "beamdasm" ){
             return;
         }
 

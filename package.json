@@ -39,26 +39,14 @@
                 "extensions": [
                     ".beam"
                 ]
-            },
-            {
-                "id": "beamdasm",
-                "extensions": [
-                    ".beamdasm"
-                ]
-            },
-            {
-                "id": "beamimpt",
-                "extensions": [
-                    ".beamimpt"
-                ]
             }
         ],
         "grammars": [
             {
-                "language": "beamdasm",
+                "language": "beam",
                 "scopeName": "source.beamdasm",
                 "path": "./syntaxes/beamdasm.tmLanguage.json"
-            }
+            }            
         ],
         "commands": [
             {

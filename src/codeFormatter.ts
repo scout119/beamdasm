@@ -50,13 +50,6 @@ export function formatCode(bm: BeamFile): any {
       str += ' '.repeat(lblLength + 6);
     }
 
-    // if( obj.op === 64 ){
-    //   str += instructionToString(bm, obj, -1);
-    // }
-    // else if( obj.op === 59 ){
-    //   str += instructionToString(bm, obj, -1);        
-    // } 
-    //else 
     if (obj.op === 7 || obj.op === 8) {
       str += instructionToString(bm, obj, 1);
     }
@@ -75,10 +68,10 @@ export function formatCode(bm: BeamFile): any {
 
     if (obj.line) {
       //skip zero lines
-      //if (obj.line[0].data !== 0) {
+      if (obj.line[0].data !== 0) {
         let line_ref = bm._line_refs[obj.line[0].data];
         str += ` //line ${bm._line_fnames[line_ref[0]]}, ${line_ref[1]}`;
-      //}
+      }
     }
 
     str += '\n';
