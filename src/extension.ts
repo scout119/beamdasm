@@ -32,13 +32,14 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     let contentProvider = new BeamDasmContentProvider();
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamcode", contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamimpt", contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamexpt", contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamatom", contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamlitt", contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamloct", contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamattr", contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamcode', contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamimpt', contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamexpt', contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamatom', contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamatu8', contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamlitt', contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamloct', contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamattr', contentProvider));
 
     let beamFilesProvider = new BeamFilesProvider(context, rootPath);
     let command = vscode.commands.registerCommand('beamdasm.refreshBeamTree', () => beamFilesProvider.refresh());
@@ -60,7 +61,7 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             if (fs.existsSync(fileUri.fsPath)) {
-                let sectionDocument = vscode.Uri.file(fileUri.fsPath.replace(".beam",`.beam_code`));
+                let sectionDocument = vscode.Uri.file(fileUri.fsPath.replace('.beam','.beam_code'));
                 vscode.commands.executeCommand('vscode.open', sectionDocument.with({ scheme: 'beamcode' }));
             }
         }

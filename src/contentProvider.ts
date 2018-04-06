@@ -17,10 +17,10 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import BeamFile from './beam/beamFile';
-import { DasmFormatter } from './codeFormatter';
+import { BeamdasmFormatter } from './beamdasmFormatter';
 
 /// <reference path="interface.ts"/>
-/// <reference path="codeFormatter.ts"/>
+/// <reference path="beamdasmFormatter.ts"/>
 
 
 
@@ -28,7 +28,7 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
 
   formatter: beamdasm.BeamBytecodeFormatter;
   constructor(){
-    this.formatter = new DasmFormatter();
+    this.formatter = new BeamdasmFormatter();
   }
 
   public provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
@@ -40,49 +40,32 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
     if( !uri || !(uri instanceof vscode.Uri)){
       return;
     }
-
     
-    let beamFile : string = uri.fsPath;//.replace(".beamdasm", ".beam");
-
-    
-    beamFile = beamFile.substr(0,beamFile.length-5);    
-    if( !fs.existsSync(beamFile) ){
+    let beamFilePath : string = uri.fsPath.substr(0,uri.fsPath.length-5);
+        
+    if( !fs.existsSync(beamFilePath) ){
       return;
     }
 
-    let bm = BeamFile.fromFile(beamFile);
+    let beamFile = BeamFile.fromFile(beamFilePath);
 
     let str = '';
 
+    function formatSection(formatter: beamdasm.BeamBytecodeFormatter, section: string): string {
+      let str = '';
+        
+      if( section in beamFile.sections ){
+        let funcName = `format${section}`;
+        str = 'BEAM section is missing formatting function';
+        if( funcName in formatter ){          
+          str = formatter[funcName](beamFile);
+        }      
+      }
+      return str;
+    }    
 
-
-    //TODO: Introduce configurable formatter to have different ways to show
-    //      disassembler code. similar to ILDASM, erlang .S style, etc.
-    if(uri.scheme === 'beamimpt'){
-      str += this.formatter.formatModuleInfo(bm);
-      str += this.formatter.formatImportTable(bm);
-    }
-    else if(uri.scheme === 'beamexpt'){
-      str += this.formatter.formatModuleInfo(bm);
-      str += this.formatter.formatExportTable(bm);
-    }
-    else if(uri.scheme === 'beamatom') {
-      str += this.formatter.formatModuleInfo(bm);
-      str += this.formatter.formatAtomsTable(bm);      
-    }
-    else{
-
-      // for (const key in bm._chunks) {
-      //   if (bm._chunks.hasOwnProperty(key)) {
-      //     const element = bm._chunks[key];
-      //     console.log(key);
-      //   }
-      // }
-
-      let content = this.formatter.formatCode(bm);
-      str = content.str;
-    }
-
+    let section = uri.scheme.substr(4,4);
+    str = formatSection(this.formatter, section);
     
     return str;
   }

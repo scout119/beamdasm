@@ -147,15 +147,19 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
 
           let bm = BeamFile.fromFile(element.filePath);
 
-          if ('atu8' in bm._chunks || 'atom' in bm._chunks) {
-            final.push(new BeamChunkItem("Atoms", 'Atom', element.filePath,'atom.svg'));
+          if ('atu8' in bm.sections ) {
+            final.push(new BeamChunkItem("Atoms", 'AtU8', element.filePath,'atom.svg'));
           }
 
-          if ('impt' in bm._chunks) {
+          if ('Atom' in bm.sections ) {
+            final.push(new BeamChunkItem("Atoms", 'Atom', element.filePath,'atom.svg'));
+          }
+          
+          if ('impt' in bm.sections) {
             final.push(new BeamChunkItem("Imports", 'Impt', element.filePath, 'func.svg'));
           }
 
-          if ('expt' in bm._chunks) {
+          if ('expt' in bm.sections) {
             final.push(new BeamChunkItem("Exports", "Expt", element.filePath, 'func.svg'));
           }
 

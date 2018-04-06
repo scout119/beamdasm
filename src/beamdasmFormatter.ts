@@ -14,7 +14,6 @@
 
 'use strict';
 
-import BeamFile from './beam/beamFile';
 import { opcodes } from './beam/opcodes';
 import * as tags from './beam/tags';
 
@@ -22,9 +21,73 @@ import * as tags from './beam/tags';
 
 let lbl: (val: number) => string;
 
-export class DasmFormatter {
+function instructionToString(bm: beamdasm.IBeamFile, obj: any, func: number): string {
+  let name = opcodes[obj.op].nm;
+  let str = `  ${name}` + ' '.repeat(20 - name.length);
 
-  formatCode(bm: beamdasm.IBeamFile): any {
+  for (let i = 0; i < opcodes[obj.op].ar; i++) {
+    if (i === func) {
+      let func_info = bm.imports[obj.params[i].data];
+      str += ` ${bm.atoms[func_info.module]}:${bm.atoms[func_info.function]}/${func_info.arity}`;
+    }
+    else {
+      str += ` ${termToString(bm, obj.params[i])}`;
+    }
+  }
+  return str;
+}
+
+function termToString(bm: beamdasm.IBeamFile, obj: any): string {
+  if (obj.tag === tags.TAG_LABEL) {
+    return lbl(obj.data);
+  }
+  if (obj.tag === tags.TAG_X_REGISTER) {
+    return `X[${obj.data}]`;
+  }
+  if (obj.tag === tags.TAG_Y_REGISTER) {
+    return `Y[${obj.data}]`;
+  }
+  if (obj.tag === tags.TAG_ATOM) {
+    let value = bm.atoms[obj.data];
+    return value === undefined ? `.` : `${value}`;
+  }
+  if (obj.tag === tags.TAG_EXT_FLOAT_REGISTER) {
+    return `FR[${obj.data}]`;
+  }
+  if (obj.tag === tags.TAG_EXT_LITERAL) {
+    return `${bm.literals[obj.data]}`;
+  }
+  if (obj.tag === tags.TAG_EXT_LIST) {
+    let str = '[';
+    for (let i = 0; i < obj.data.length; i++) {
+      str += (i !== 0) ? ', ' : '';
+      str += `${termToString(bm, obj.data[i])}`;
+    }
+    str += ']';
+
+    return str;
+  }
+
+  if (obj.tag === tags.TAG_LITERAL || obj.tag === tags.TAG_INTEGER) {
+    return `${obj.data}`;
+  }
+
+  return `.`;
+}
+
+export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
+
+  formatModuleInfo(bm: beamdasm.IBeamFile): string {
+    let str = `Module:  ${bm.atoms[1]}\n`;
+    str += '\n';
+    str += `Attributes: ${bm.attributes}\n`;
+    str += '\n';
+    str += `Compilation Info: ${bm.compilationInfo}\n`;
+    str += '\n';
+    return str;
+  }
+  
+  formatcode(bm: beamdasm.IBeamFile): string {
 
     let str = '';
 
@@ -51,19 +114,19 @@ export class DasmFormatter {
       }
 
       if (obj.op === 7 || obj.op === 8) {
-        str += this.instructionToString(bm, obj, 1);
+        str += instructionToString(bm, obj, 1);
       }
       else if (obj.op === 9) {
-        str += this.instructionToString(bm, obj, 0);
+        str += instructionToString(bm, obj, 0);
       }
       else if (obj.op === 78) {
-        str += this.instructionToString(bm, obj, 1);
+        str += instructionToString(bm, obj, 1);
       }
       else if (obj.op === 124 || obj.op === 125) {
-        str += this.instructionToString(bm, obj, 2);
+        str += instructionToString(bm, obj, 2);
       }
       else {
-        str += this.instructionToString(bm, obj, -1);
+        str += instructionToString(bm, obj, -1);
       }
 
       if (obj.line) {
@@ -76,74 +139,10 @@ export class DasmFormatter {
 
       str += '\n';
     }
-    return { str: str };
-  }
-
-  instructionToString(bm: beamdasm.IBeamFile, obj: any, func: number): string {
-    let name = opcodes[obj.op].nm;
-    let str = `  ${name}` + ' '.repeat(20 - name.length);
-
-    for (let i = 0; i < opcodes[obj.op].ar; i++) {
-      if (i === func) {
-        let func_info = bm.imports[obj.params[i].data];
-        str += ` ${bm.atoms[func_info.module]}:${bm.atoms[func_info.function]}/${func_info.arity}`;
-      }
-      else {
-        str += ` ${this.termToString(bm, obj.params[i])}`;
-      }
-    }
     return str;
   }
 
-  termToString(bm: beamdasm.IBeamFile, obj: any): string {
-    if (obj.tag === tags.TAG_LABEL) {
-      return lbl(obj.data);
-    }
-    if (obj.tag === tags.TAG_X_REGISTER) {
-      return `X[${obj.data}]`;
-    }
-    if (obj.tag === tags.TAG_Y_REGISTER) {
-      return `Y[${obj.data}]`;
-    }
-    if (obj.tag === tags.TAG_ATOM) {
-      let value = bm.atoms[obj.data];
-      return value === undefined ? `.` : `${value}`;
-    }
-    if (obj.tag === tags.TAG_EXT_FLOAT_REGISTER) {
-      return `FR[${obj.data}]`;
-    }
-    if (obj.tag === tags.TAG_EXT_LITERAL) {
-      return `${bm.literals[obj.data]}`;
-    }
-    if (obj.tag === tags.TAG_EXT_LIST) {
-      let str = '[';
-      for (let i = 0; i < obj.data.length; i++) {
-        str += (i !== 0) ? ', ' : '';
-        str += `${this.termToString(bm, obj.data[i])}`;
-      }
-      str += ']';
-
-      return str;
-    }
-
-    if (obj.tag === tags.TAG_LITERAL || obj.tag === tags.TAG_INTEGER) {
-      return `${obj.data}`;
-    }
-
-    return `.`;
-  }
-
-  formatModuleInfo(bm: beamdasm.IBeamFile): string {
-    let str = `Module:  ${bm.atoms[1]}\n`;
-    str += '\n';
-    str += `Attributes: ${bm.attributes}\n`;
-    str += '\n';
-    str += `Compilation Info: ${bm.compilationInfo}\n`;
-    str += '\n';
-    return str;
-  }
-
-  printLiteralsTable(bm: BeamFile): string {
+  formatlitt(bm: beamdasm.IBeamFile): string {
     let str = 'Literals: ';
     str += `${bm.literals}\n`;
 
@@ -151,7 +150,7 @@ export class DasmFormatter {
     return str;
   }
 
-  formatAtomsTable(bm: beamdasm.IBeamFile): string {
+  formatatu8(bm: beamdasm.IBeamFile): string {
     let str = 'Atoms:   ';
     let offset = str.length;
 
@@ -164,7 +163,7 @@ export class DasmFormatter {
     return str;
   }
 
-  formatImportTable(bm: beamdasm.IBeamFile): string {
+  formatimpt(bm: beamdasm.IBeamFile): string {
     let str = 'Imports: ';
     let offset = str.length;
 
@@ -179,7 +178,7 @@ export class DasmFormatter {
     return str;
   }
 
-  formatExportTable(bm: beamdasm.IBeamFile): string {
+  formatexpt(bm: beamdasm.IBeamFile): string {
 
     if (!lbl) {
       let lblLength = bm.codeNumberOfLabels.toString().length;
@@ -199,7 +198,7 @@ export class DasmFormatter {
     return str;
   }
 
-  printLocalTable(bm: BeamFile): string {
+  formatloct(bm: beamdasm.IBeamFile): string {
 
     if (!lbl) {
       let lblLength = bm.codeNumberOfLabels.toString().length;
@@ -211,8 +210,8 @@ export class DasmFormatter {
     let str = 'Private: ';
     let offset = str.length;
 
-    for (let i = 0; i < bm._locals.length; i++) {
-      let func_info = bm._locals[i];
+    for (let i = 0; i < bm.LocT.length; i++) {
+      let func_info = bm.LocT[i];
       str += (i !== 0) ? ' '.repeat(offset) : '';
       str += `${func_info.function}/${func_info.arity}/${func_info.label} ${bm.atoms[func_info.function]}/${func_info.arity} ${lbl(func_info.label)}\n`;
     }
@@ -220,12 +219,14 @@ export class DasmFormatter {
     return str;
   }
 
-  printStringTable(bm: BeamFile): string {
+  formatstrt(bm: beamdasm.IBeamFile): string {
     let str = 'Strings: ';
 
-    str += `\"${bm._str}\"\n`;
+    str += `\"${bm.StrT}\"\n`;
 
     str += '\n';
     return str;
   }
+
+  [func: string]: (beamFile: beamdasm.IBeamFile) => string;
 }

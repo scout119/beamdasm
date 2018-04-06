@@ -33,11 +33,13 @@ export default class BeamFile implements beamdasm.IBeamFile {
   _codeInstructionSet: number = 0;
   _codeExtraFields: number = 0;
 
+  sections:any = {};
+
   atoms: string[] = ["nil"];
   imports: any[] = [];
   exports: any[] = [];
-  _locals: any[] = [];
-  _str: string = "";
+  LocT: any[] = [];
+  StrT: string = "";
 
   literals: any[] = [];
   attributes: any;
@@ -58,8 +60,6 @@ export default class BeamFile implements beamdasm.IBeamFile {
     return beamFile;
   }
 
-  _chunks:any = {};
-
   readBeamFile(filePath: string) {
     let buffer: Buffer = fs.readFileSync(filePath);
 
@@ -79,7 +79,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
 
     let offset = 12;
 
-    this._chunks ={};
+    this.sections ={};
     //Quick scan to get chunks offsets and sizes
     //We want to read them in particular order, not the order
     //chunks are present in the file
@@ -88,62 +88,62 @@ export default class BeamFile implements beamdasm.IBeamFile {
       let name = buffer.toString('utf8', offset, offset+4);
       let size = buffer.readUInt32BE(offset+4);
 
-      this._chunks[name.toLowerCase()] = {start: offset + 8, length: size};
+      this.sections[name.toLowerCase()] = {start: offset + 8, length: size};
 
       offset = offset + 8 + (((size + 3)>>2)<<2);
     }
 
     this.atoms = ['nil'];
 
-    if( 'atu8' in this._chunks ){
-      this.readAttomsChunk(buffer, this._chunks['atu8'].start, true);
+    if( 'atu8' in this.sections ){
+      this.readAttomsChunk(buffer, this.sections['atu8'].start, true);
     }
 
-    if( 'atom' in this._chunks ){
-      this.readAttomsChunk(buffer, this._chunks['atom'].start, false);
+    if( 'atom' in this.sections ){
+      this.readAttomsChunk(buffer, this.sections['atom'].start, false);
     }
 
-    if( 'impt' in this._chunks ){      
-      this.readImportChunk(buffer, this._chunks['impt'].start);
+    if( 'impt' in this.sections ){      
+      this.readImportChunk(buffer, this.sections['impt'].start);
     }
 
-    if( 'expt' in this._chunks ){
-      this.readExportChunk(buffer, this._chunks['expt'].start);
+    if( 'expt' in this.sections ){
+      this.readExportChunk(buffer, this.sections['expt'].start);
     }
 
-    if( 'funt' in this._chunks ){
-      this.readFunctionChunk(buffer, this._chunks['funt'].start);
+    if( 'funt' in this.sections ){
+      this.readFunctionChunk(buffer, this.sections['funt'].start);
     }
 
-    if( 'loct' in this._chunks ){
-      this.readLocalChunk(buffer, this._chunks['loct'].start);
+    if( 'loct' in this.sections ){
+      this.readLocalChunk(buffer, this.sections['loct'].start);
     }
 
-    if( 'strt' in this._chunks ){
-      this.readStringChunk(buffer, this._chunks['strt'].start, this._chunks['strt'].length);
+    if( 'strt' in this.sections ){
+      this.readStringChunk(buffer, this.sections['strt'].start, this.sections['strt'].length);
     }
 
-    if( 'cinf' in this._chunks ){
-      this.readCompilationInfoChunk(buffer, this._chunks['cinf'].start);
+    if( 'cinf' in this.sections ){
+      this.readCompilationInfoChunk(buffer, this.sections['cinf'].start);
     }
 
-    if( 'attr' in this._chunks ){
-      this.readAttributesChunk(buffer, this._chunks['attr'].start);
+    if( 'attr' in this.sections ){
+      this.readAttributesChunk(buffer, this.sections['attr'].start);
     }
 
-    if( 'litt' in this._chunks ){
-      this.readLiteralsChunk(buffer, this._chunks['litt'].start, this._chunks['litt'].length);
+    if( 'litt' in this.sections ){
+      this.readLiteralsChunk(buffer, this.sections['litt'].start, this.sections['litt'].length);
     }
 
-    if( 'line' in this._chunks ) {
-      this.readLineChunk(buffer, this._chunks['line'].start);
+    if( 'line' in this.sections ) {
+      this.readLineChunk(buffer, this.sections['line'].start);
     }
 
-    if( 'catt' in this._chunks ){
+    if( 'catt' in this.sections ){
       console.log('Found CatT chunk');
     }
 
-    if( 'abst' in this._chunks ){
+    if( 'abst' in this.sections ){
       console.log('Found Abst chunk');
     }
 
@@ -159,8 +159,8 @@ export default class BeamFile implements beamdasm.IBeamFile {
     //   this.readDbgiChunk(buffer, this._chunks['dbgi'].start, this._chunks['dbgi'].length);
     // }
 
-    if( 'code' in this._chunks ){
-      this.readCodeChunk(buffer, this._chunks['code'].start, this._chunks['code'].length);
+    if( 'code' in this.sections ){
+      this.readCodeChunk(buffer, this.sections['code'].start, this.sections['code'].length);
     }
   }
 
@@ -295,7 +295,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
   }
 
   readStringChunk(buffer: Buffer, offset: number, length: number) {
-    this._str = buffer.toString('utf8', offset, offset + length);
+    this.StrT = buffer.toString('utf8', offset, offset + length);
   }
 
   readImportChunk(buffer: Buffer, offset: number) {
@@ -333,7 +333,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
 
   readLocalChunk(buffer: Buffer, offset: number) {
 
-    this._locals = [];
+    this.LocT = [];
 
     let nLocals = buffer.readUInt32BE(offset);
     offset += 4;
@@ -343,7 +343,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
       let arity = buffer.readUInt32BE(offset); offset += 4;
       let label = buffer.readUInt32BE(offset); offset += 4;
 
-      this._locals.push({ function: func, arity: arity, label: label });
+      this.LocT.push({ function: func, arity: arity, label: label });
     }
   }
 
