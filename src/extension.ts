@@ -31,11 +31,16 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.languages.registerHoverProvider("beamdasm", new BeamDasmHoverProvider())
     );
 
-    context.subscriptions.push(
-        vscode.workspace.registerTextDocumentContentProvider("beamdasm", new BeamDasmContentProvider())
-    );
+    let contentProvider = new BeamDasmContentProvider();
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamdasm", contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamimpt", contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamexpt", contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamatom", contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamlitt", contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamloct", contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamattr", contentProvider));
 
-    let beamFilesProvider = new BeamFilesProvider(rootPath);
+    let beamFilesProvider = new BeamFilesProvider(context, rootPath);
     let command = vscode.commands.registerCommand('beamdasm.refreshBeamTree', () => beamFilesProvider.refresh());
     context.subscriptions.push(command);
 
@@ -61,10 +66,10 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
 
-    setupDecorators();
+    setupDecorators(context);
 }
 
-function setupDecorators() {
+function setupDecorators(context: vscode.ExtensionContext) {
     const functionDecorationType = vscode.window.createTextEditorDecorationType({
         light: {
             gutterIconPath: path.join(__filename, '..', '..', 'resources', 'light', 'func.svg')
@@ -74,6 +79,8 @@ function setupDecorators() {
         },
         gutterIconSize: "16px",
     });
+
+    context.subscriptions.push(functionDecorationType);
 
     let timeout: any = null;
     function triggerUpdateDecorations() {
@@ -121,5 +128,5 @@ function setupDecorators() {
 }
 
 export function deactivate() {
-    console.log('BEAMdasm is disposed');
+    console.log('BEAMdasm is deactivated');
 }

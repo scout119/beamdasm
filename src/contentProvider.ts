@@ -25,11 +25,20 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
 
   public provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
 
+    if(token.isCancellationRequested){
+      return;
+    }
+
     if( !uri || !(uri instanceof vscode.Uri)){
       return;
     }
+
     
     let beamFile : string = uri.fsPath;//.replace(".beamdasm", ".beam");
+
+    if(uri.scheme !== 'beamdasm'){
+      beamFile = beamFile.substr(0,beamFile.length-5);
+    }
 
     if( !fs.existsSync(beamFile) ){
       return;

@@ -1,3 +1,17 @@
+// Copyright 2018 Valentin Ivanov (valen.ivanov@gmail.com)
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 'use strict';
 
 import * as vscode from 'vscode';
@@ -14,43 +28,39 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
   prod: BeamVirtualFolder = new BeamVirtualFolder('prod');
   deps: BeamVirtualFolder = new BeamVirtualFolder('deps');
 
-  private watcher : vscode.FileSystemWatcher;
-  
-  constructor(private workspaceRoot: string | undefined) {
 
-    this.watcher = vscode.workspace.createFileSystemWatcher('**/*.{beam}');
+  constructor(context: vscode.ExtensionContext, private workspaceRoot: string | undefined) {
 
-    this.watcher.onDidChange( (e:vscode.Uri) => {
-      triggerUpdateTree();
-    });
+    let watcher = vscode.workspace.createFileSystemWatcher('**/*.{beam}');
 
-    this.watcher.onDidCreate( (e:vscode.Uri) => {
-      triggerUpdateTree();
-    });
-    
-    this.watcher.onDidDelete( (e:vscode.Uri) => {
-      triggerUpdateTree();
-    });
+    context.subscriptions.push(watcher);
+    watcher.onDidChange(_ => triggerUpdateTree(), undefined, context.subscriptions);
+    watcher.onDidCreate(_ => triggerUpdateTree(), undefined, context.subscriptions);
+    watcher.onDidDelete(_ => triggerUpdateTree(), undefined, context.subscriptions);
 
     //For some reason onDidDelete is not firing when file is deleted by not a user
     if (workspaceRoot && fs.existsSync(workspaceRoot)) {
       //Watcher is not 100% consistent on all platforms     
-      fs.watch(workspaceRoot, { recursive: true }, (event: string, filename: string | Buffer) => {
+      let fsWatcher = fs.watch(workspaceRoot, { recursive: true }, (event: string, filename: string | Buffer) => {
         let file = (filename instanceof Buffer) ? filename.toString() : filename;
-        
+
         if (path.extname(file) === ".beam") {
-          if( event === 'rename') {
+          if (event === 'rename') {
             triggerUpdateTree();
           }
         }
         return undefined;
       });
+
+      if (fsWatcher) {
+        context.subscriptions.push({ dispose(): any { fsWatcher.close(); } });
+      }
     }
 
     var timeout: any = null;
     let provider = this;
     function triggerUpdateTree() {
-      if( timeout ){
+      if (timeout) {
         clearTimeout(timeout);
       }
 
@@ -60,7 +70,7 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
     }
   }
 
-  refresh(): void {   
+  refresh(): void {
     this._didChangeTreeData.fire();
   }
 
@@ -75,7 +85,7 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
       return Promise.resolve([]);
     }
 
-  
+
     let provider = this;
     let root = this.workspaceRoot;
 
@@ -84,7 +94,7 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
       let final: vscode.TreeItem[] = [];
 
       if (!element) {
-        
+
         this.dev.items = [];
         this.prod.items = [];
         this.deps.items = [];
@@ -121,7 +131,7 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
           });
         };
         getBeamFiles(root, beamFiles);
-  
+
 
         let top: vscode.TreeItem[] = [provider.dev, provider.prod, provider.deps];
         final = top.concat(
@@ -134,39 +144,21 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
           ));
       } else if (element instanceof BeamFileItem) {
         if (fs.existsSync(element.filePath)) {
-          
+
           let bm = BeamFile.fromFile(element.filePath);
 
-          if ('atu8' in bm._chunks || 'atom' in bm._chunks ) {
-            let item = new BeamChunkItem("Atoms");
-            item.iconPath = {
-              light: path.join(__filename, '..', '..', 'resources', 'light', 'atom.svg'),
-              dark: path.join(__filename, '..', '..', 'resources', 'dark', 'atom.svg')
-            };
-
-            final.push(item);            
+          if ('atu8' in bm._chunks || 'atom' in bm._chunks) {
+            final.push(new BeamChunkItem("Atoms", 'Atom', element.filePath,'atom.svg'));
           }
 
-          if ('impt' in bm._chunks  ) {
-            let item = new BeamChunkItem("Imports");
-            item.iconPath = {
-              light: path.join(__filename, '..', '..', 'resources', 'light', 'func.svg'),
-              dark: path.join(__filename, '..', '..', 'resources', 'dark', 'func.svg')
-            };
-
-            final.push(item);            
+          if ('impt' in bm._chunks) {
+            final.push(new BeamChunkItem("Imports", 'Impt', element.filePath, 'func.svg'));
           }
 
-          if ('expt' in bm._chunks  ) {
-            let item = new BeamChunkItem("Exports");
-            item.iconPath = {
-              light: path.join(__filename, '..', '..', 'resources', 'light', 'func.svg'),
-              dark: path.join(__filename, '..', '..', 'resources', 'dark', 'func.svg')
-            };
-
-            final.push(item);            
+          if ('expt' in bm._chunks) {
+            final.push(new BeamChunkItem("Exports", "Expt", element.filePath, 'func.svg'));
           }
-          
+
         }
       } else if (element instanceof BeamVirtualFolder) {
         final = element.items;
@@ -217,7 +209,19 @@ class BeamFileItem extends vscode.TreeItem {
 }
 
 class BeamChunkItem extends vscode.TreeItem {
-  constructor(public readonly label: string) {
+  constructor(public readonly label: string, chunk: string, filePath: string, icon:string) {
     super(label, vscode.TreeItemCollapsibleState.None);
+
+    let sectionDocument = vscode.Uri.file(filePath.replace(".beam",`.beam_${chunk}`));
+    this.command = {
+      command: 'vscode.open',
+      arguments: [sectionDocument.with({scheme: `beam${chunk.toLowerCase()}`})],
+      title: `View ${chunk}`
+    };
+    this.iconPath = {
+      light: path.join(__filename,'..','..','resources','light',icon),
+      dark: path.join(__filename,'..','..','resources','dark',icon) 
+    };
   }
+
 }

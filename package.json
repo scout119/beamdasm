@@ -37,7 +37,8 @@
             {
                 "id": "beam",
                 "extensions": [
-                    ".beam"
+                    ".beam",
+                    ".beam.impt"
                 ]
             }
         ],
