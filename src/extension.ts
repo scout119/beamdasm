@@ -43,7 +43,7 @@ export function activate(context: vscode.ExtensionContext) {
         "loct",
         "attr",
         "strt"
-    ]
+    ];
     
     supportedSections.forEach( (section:string) => {
         context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(`beam${section}`, contentProvider));    
