@@ -26,7 +26,9 @@ export function formatCode(bm: BeamFile): any {
 
   let lblLength = bm._codeNumberOfLabels.toString().length;
   lblLength = lblLength < 2 ? 2 : lblLength;
-  lbl = (val: number) => `label${("0".repeat(lblLength) + val.toString()).slice(-lblLength)}`;
+  if( !lbl ){
+    lbl = (val: number) => `label${("0".repeat(lblLength) + val.toString()).slice(-lblLength)}`;
+  }
 
   str += printModuleInfo(bm);
   str += printLiteralsTable(bm);
@@ -134,7 +136,7 @@ function termToString(bm: BeamFile, obj: any): string {
   return `.`;
 }
 
-function printModuleInfo(bm: BeamFile): string {
+export function printModuleInfo(bm: BeamFile): string {
   let str = `Module:  ${bm._atoms[1]}\n`;
   str += '\n';
   str += `Attributes: ${bm._attributes}\n`;
@@ -144,7 +146,7 @@ function printModuleInfo(bm: BeamFile): string {
   return str;
 }
 
-function printLiteralsTable(bm: BeamFile): string {
+export function printLiteralsTable(bm: BeamFile): string {
   let str = 'Literals: ';
   str += `${bm._literals}\n`;
 
@@ -152,7 +154,7 @@ function printLiteralsTable(bm: BeamFile): string {
   return str;
 }
 
-function printAtomsTable(bm: BeamFile): string {
+export function printAtomsTable(bm: BeamFile): string {
   let str = 'Atoms:   ';
   let offset = str.length;
 
@@ -165,7 +167,7 @@ function printAtomsTable(bm: BeamFile): string {
   return str;
 }
 
-function printImportTable(bm: BeamFile): string {
+export function printImportTable(bm: BeamFile): string {
   let str = 'Imports: ';
   let offset = str.length;
 
@@ -180,7 +182,15 @@ function printImportTable(bm: BeamFile): string {
   return str;
 }
 
-function printExportTable(bm: BeamFile): string {
+export function printExportTable(bm: BeamFile): string {
+
+  if( !lbl ){
+    let lblLength = bm._codeNumberOfLabels.toString().length;
+    lblLength = lblLength < 2 ? 2 : lblLength;
+
+      lbl = (val: number) => `label${("0".repeat(lblLength) + val.toString()).slice(-lblLength)}`;
+  }
+
   let str = 'Exports: ';
   let offset = str.length;
   for (let i = 0; i < bm._exports.length; i++) {
@@ -192,7 +202,15 @@ function printExportTable(bm: BeamFile): string {
   return str;
 }
 
-function printLocalTable(bm: BeamFile): string {
+export function printLocalTable(bm: BeamFile): string {
+
+  if( !lbl ){
+    let lblLength = bm._codeNumberOfLabels.toString().length;
+    lblLength = lblLength < 2 ? 2 : lblLength;
+    
+      lbl = (val: number) => `label${("0".repeat(lblLength) + val.toString()).slice(-lblLength)}`;
+  }
+  
   let str = 'Private: ';
   let offset = str.length;
 

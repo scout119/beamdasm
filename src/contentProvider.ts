@@ -19,7 +19,12 @@ import * as fs from 'fs';
 import BeamFile from './beam/beamFile';
 
 
-import { formatCode } from './codeFormatter';
+import { 
+  formatCode, 
+  printImportTable, 
+  printModuleInfo,
+  printExportTable,
+} from './codeFormatter';
 
 export default class BeamDasmContentProvider implements vscode.TextDocumentContentProvider {
 
@@ -40,16 +45,33 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
       beamFile = beamFile.substr(0,beamFile.length-5);
     }
 
+
     if( !fs.existsSync(beamFile) ){
       return;
     }
 
     let bm = BeamFile.fromFile(beamFile);
 
+    let str = '';
+
+
+
     //TODO: Introduce configurable formatter to have different ways to show
     //      disassembler code. similar to ILDASM, erlang .S style, etc.
-    let content = formatCode(bm);
+    if(uri.scheme === 'beamimpt'){
+      str += printModuleInfo(bm);
+      str += printImportTable(bm);
+    }
+    else if(uri.scheme === 'beamexpt'){
+      str += printModuleInfo(bm);
+      str += printExportTable(bm);
+    }
+    else{
+      let content = formatCode(bm);
+      str = content.str;
+    }
+
     
-    return content.str;
+    return str;
   }
 }
