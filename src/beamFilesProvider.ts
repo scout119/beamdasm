@@ -29,7 +29,7 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
   deps: BeamVirtualFolder = new BeamVirtualFolder('deps');
 
 
-  constructor(context: vscode.ExtensionContext, private workspaceRoot: string | undefined) {
+  constructor(context: vscode.ExtensionContext, private workspaceRoot: string | undefined, private supportedSections: string[]) {
 
     let watcher = vscode.workspace.createFileSystemWatcher('**/*.{beam}');
 
@@ -147,21 +147,30 @@ export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode
 
           let bm = BeamFile.fromFile(element.filePath);
 
-          if ('atu8' in bm.sections ) {
-            final.push(new BeamChunkItem("Atoms", 'AtU8', element.filePath,'atom.svg'));
+          for (const key in bm.sections) {
+            if (bm.sections.hasOwnProperty(key)) {
+              if( this.supportedSections.indexOf(key) !== -1 && !bm.sections[key].empty )
+              {
+                final.push(new BeamChunkItem(bm.sections[key].name, key, element.filePath, `${key}.svg`));
+              }
+            }
           }
 
-          if ('Atom' in bm.sections ) {
-            final.push(new BeamChunkItem("Atoms", 'Atom', element.filePath,'atom.svg'));
-          }
+          // if ('atu8' in bm.sections ) {
+          //   final.push(new BeamChunkItem("Atoms", 'AtU8', element.filePath,'atom.svg'));
+          // }
+
+          // if ('Atom' in bm.sections ) {
+          //   final.push(new BeamChunkItem("Atoms", 'Atom', element.filePath,'atom.svg'));
+          // }
           
-          if ('impt' in bm.sections) {
-            final.push(new BeamChunkItem("Imports", 'Impt', element.filePath, 'func.svg'));
-          }
+          // if ('impt' in bm.sections) {
+          //   final.push(new BeamChunkItem("Imports", 'Impt', element.filePath, 'func.svg'));
+          // }
 
-          if ('expt' in bm.sections) {
-            final.push(new BeamChunkItem("Exports", "Expt", element.filePath, 'func.svg'));
-          }
+          // if ('expt' in bm.sections) {
+          //   final.push(new BeamChunkItem("Exports", "Expt", element.filePath, 'func.svg'));
+          // }
 
         }
       } else if (element instanceof BeamVirtualFolder) {
@@ -182,20 +191,20 @@ class BeamVirtualFolder extends vscode.TreeItem {
 }
 class BeamFileItem extends vscode.TreeItem {
 
-  elixir: boolean = false;
-
   constructor(public readonly label: string,
     public readonly filePath: string
   ) {
     super(label, vscode.TreeItemCollapsibleState.Collapsed);
 
+    let elixirFile = false;
+
     if (label.startsWith('Elixir.')) {
-      this.elixir = true;
+      elixirFile = true;
     }
 
     this.iconPath = {
-      light: path.join(__filename, '..', '..', 'resources', this.elixir ? 'elixir.svg' : 'erlang.svg'),
-      dark: path.join(__filename, '..', '..', 'resources', this.elixir ? 'elixir.svg' : 'erlang.svg')
+      light: path.join(__filename, '..', '..', 'resources', elixirFile ? 'elixir.svg' : 'erlang.svg'),
+      dark: path.join(__filename, '..', '..', 'resources', elixirFile ? 'elixir.svg' : 'erlang.svg')
     };
   }
 

@@ -32,16 +32,24 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     let contentProvider = new BeamDasmContentProvider();
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamcode', contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamimpt', contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamexpt', contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamatom', contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamatu8', contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamlitt', contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamloct', contentProvider));
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider('beamattr', contentProvider));
 
-    let beamFilesProvider = new BeamFilesProvider(context, rootPath);
+    let supportedSections = [
+        "code",
+        "impt",
+        "expt",
+        "atom",
+        "atu8",
+        "litt",
+        "loct",
+        "attr",
+        "strt"
+    ]
+    
+    supportedSections.forEach( (section:string) => {
+        context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(`beam${section}`, contentProvider));    
+    });
+
+    let beamFilesProvider = new BeamFilesProvider(context, rootPath, supportedSections);
     let command = vscode.commands.registerCommand('beamdasm.refreshBeamTree', () => beamFilesProvider.refresh());
     context.subscriptions.push(command);
 
