@@ -22,25 +22,34 @@ import Tuple from './terms/tuple';
 import { opcodes } from './opcodes';
 import * as tags from './tags';
 
+/// <reference path="interface.ts"/>
 
-export default class BeamFile {
+export default class BeamFile implements beamdasm.IBeamFile {
 
-  _code: any[] = [];
+  readonly code: any[] = [];
   _codeNumberOfFunctions: number = 0;
-  _codeNumberOfLabels: number = 0;
+  codeNumberOfLabels: number = 0;
   _codeHighestOpcode: number = 0;
   _codeInstructionSet: number = 0;
   _codeExtraFields: number = 0;
 
-  _atoms: string[] = ["nil"];
-  _imports: any[] = [];
-  _exports: any[] = [];
-  _locals: any[] = [];
-  _str: string = "";
+  sections:any = {};
 
-  _literals: any[] = [];
-  _attributes: any;
-  _compilationInfo: any;
+  atoms: string[] = ["nil"];
+  imports: any[] = [];
+  exports: any[] = [];
+  LocT: any[] = [];
+  StrT: string = "";
+
+  literals: any[] = [];
+  attributes: any;
+  compilationInfo: any;
+
+
+  lineRefs: any[] = [];
+  lineFNames: any[] = [];
+  lineInstrCount: number = 0;
+
 
   static fromFile(filePath: string): BeamFile {
 
@@ -70,7 +79,7 @@ export default class BeamFile {
 
     let offset = 12;
 
-    let chunks : any = {};
+    this.sections ={};
     //Quick scan to get chunks offsets and sizes
     //We want to read them in particular order, not the order
     //chunks are present in the file
@@ -79,289 +88,401 @@ export default class BeamFile {
       let name = buffer.toString('utf8', offset, offset+4);
       let size = buffer.readUInt32BE(offset+4);
 
-      chunks[name.toLowerCase()] = {start: offset + 8, length: size};
+      this.sections[name.toLowerCase()] = {start: offset + 8, length: size};
 
       offset = offset + 8 + (((size + 3)>>2)<<2);
-      console.log(name);
     }
 
-    this._atoms = ['nil'];
+    this.atoms = ['nil'];
 
-    if( 'atu8' in chunks ){
-      this.readAttomsChunk(buffer, chunks['atu8'].start, true);
+    
+    this.readAtu8Section(buffer);
+    this.readAtomSection(buffer);          
+    this.readImptSection(buffer);
+    this.readExptSection(buffer);
+    this.readFuntSection(buffer);
+    this.readLoctSection(buffer);
+    this.readStrtSection(buffer);
+    this.readCInfSection(buffer);
+    this.readAttrSection(buffer);
+    this.readLittSection(buffer);
+    this.readLineSection(buffer);
+    
+
+    if( 'catt' in this.sections ){
+      console.log('Found CatT chunk');
     }
 
-    if( 'atom' in chunks ){
-      this.readAttomsChunk(buffer, chunks['atom'].start, false);
+    if( 'abst' in this.sections ){
+      console.log('Found Abst chunk');
     }
 
-    if( 'impt' in chunks ){      
-      this.readImportChunk(buffer, chunks['impt'].start);
-    }
+    // if( 'exdc' in this._chunks ) {
+    // this.readExDcSection(buffer);
+    // this.readExDpSection(buffer);
+    // this.readDbgiSection(buffer);
 
-    if( 'expt' in chunks ){
-      this.readExportChunk(buffer, chunks['expt'].start);
-    }
+    this.readCodeSection(buffer);
+  }
 
-    if( 'funt' in chunks ){
-      this.readFunctionChunk(buffer, chunks['funt'].start);
-    }
+  readDbgiSection(buffer: Buffer) {
+    if ('dbgi' in this.sections) {
+      let section = this.sections['dbgi'];
+      section.name = 'Debug Info (Dbgi)';
+      let offset = section.start;
+      let length = section.length;
 
-    if( 'loct' in chunks ){
-      this.readLocalChunk(buffer, chunks['loct'].start);
-    }
+      buffer.readUInt8(offset++); //131 marker
+      buffer.readUInt8(offset++); //80
 
-    if( 'strt' in chunks ){
-      this.readStringChunk(buffer, chunks['strt'].start, chunks['strt'].length);
-    }
+      buffer.readUInt32BE(offset); offset += 4; //uncompressedSize 
+      let chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
 
-    if( 'cinf' in chunks ){
-      this.readCompilationInfoChunk(buffer, chunks['cinf'].start);
-    }
-
-    if( 'attr' in chunks ){
-      this.readAttributesChunk(buffer, chunks['attr'].start);
-    }
-
-    if( 'litt' in chunks ){
-      this.readLiteralsChunk(buffer, chunks['litt'].start, chunks['litt'].length);
-    }
-
-    if( 'line' in chunks ) {
-      this.readLineChunk(buffer, chunks['line'].start);
-    }
-
-    // if( 'exdc' in chunks ) {
-    //   this.readExDcChunk(buffer, chunks['exdc'].start, chunks['exdc'].length);
-    // }
-
-    // if( 'exdp' in chunks ) {
-    //   this.readExDpChunk(buffer, chunks['exdp'].start);
-    // }
-
-    // if( 'dbgi' in chunks ) {
-    //   this.readDbgiChunk(buffer, chunks['dbgi'].start, chunks['dbgi'].length);
-    // }
-
-    if( 'code' in chunks ){
-      this.readCodeChunk(buffer, chunks['code'].start, chunks['code'].length);
+      offset = 0;
+      let tag = chunk.readUInt8(offset);
+      let obj = this.readObject(tag, chunk, offset + 1);
+      console.log(`${obj.data}`);
     }
   }
 
-  readDbgiChunk(buffer: Buffer, offset: number, length: number) {
-    buffer.readUInt8(offset++); //131 marker
-    buffer.readUInt8(offset++); //80
+  readExDpSection(buffer: Buffer) {
+    if ('exdp' in this.sections) {
+      let section = this.sections['exdp'];
+      section.name = 'ExDp';
+      let offset = section.start;
+      buffer.readUInt8(offset++); //131
+      let tag = buffer.readUInt8(offset++);
+      let obj = this.readObject(tag, buffer, offset);
 
-    buffer.readUInt32BE(offset); offset += 4; //uncompressedSize 
-    let chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
-
-    offset = 0;
-    let tag = chunk.readUInt8(offset);
-    let obj = this.readObject(tag, chunk, offset + 1);
-    console.log(`${obj.data}`);
+      console.log(`${obj.data}`);
+    }
   }
 
-  readExDpChunk(buffer: Buffer, offset: number) {
-    buffer.readUInt8(offset++); //131
-    let tag = buffer.readUInt8(offset++);
-    let obj = this.readObject(tag, buffer, offset);
+  readExDcSection(buffer: Buffer) {
+    if ('exdc' in this.sections) {
+      let section = this.sections['exdc'];
+      section.name = 'ExDoc (ExDc)';
+      let offset = section.offset;
+      let length = section.length;
+      buffer.readUInt8(offset++); //131 marker
+      buffer.readUInt8(offset++); //80
+      buffer.readUInt32BE(offset); offset += 4; //uncompressedSize
 
-    console.log(`${obj.data}`);
+      let chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
+
+
+      offset = 0;
+      let tag = chunk.readUInt8(offset);
+      let obj = this.readObject(tag, chunk, offset + 1);
+
+      console.log(`${obj.data}`);
+    }
   }
-
-  readExDcChunk(buffer: Buffer, offset: number, length: number) {
-    buffer.readUInt8(offset++); //131 marker
-    buffer.readUInt8(offset++); //80
-    buffer.readUInt32BE(offset); offset += 4; //uncompressedSize
-
-    let chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
-
-
-    offset = 0;
-    let tag = chunk.readUInt8(offset);
-    let obj = this.readObject(tag, chunk, offset + 1);
-
-    console.log(`${obj.data}`);
-    //let numValues = res.readUInt32BE(0);
-  }
-
 
   _functions: any[] = [];
 
-  readFunctionChunk(buffer: Buffer, offset: number) {
-    let count = buffer.readUInt32BE(offset); offset += 4;
-    this._functions = [];
-    while (count-- > 0) {
-      let atom_index = buffer.readUInt32BE(offset); offset += 4;
-      let arity = buffer.readUInt32BE(offset); offset += 4;
-      let code_position = buffer.readUInt32BE(offset); offset += 4;
-      let index = buffer.readUInt32BE(offset); offset += 4;
-      let n_free = buffer.readInt32BE(offset); offset += 4;
-      let ouniq = buffer.readUInt32BE(offset); offset += 4;
+  readFuntSection(buffer: Buffer) {
 
-      this._functions.push({
-        atom: atom_index,
-        arity: arity,
-        code: code_position,
-        index: index,
-        free: n_free,
-        ouniq: ouniq
-      });
-    }
-  }
+    if ('funt' in this.sections) {
+      let section = this.sections['funt'];
+      section.name = 'Functions/Lambdas (FunT)';
 
-  _line_refs: any[] = [];
-  _line_fnames: any[] = [];
-  _line_instr_count: number = 0;
+      this._functions = [];
+      let offset = section.start;
 
-  readLineChunk(buffer: Buffer, offset: number) {
+      let count = buffer.readUInt32BE(offset);
 
-    this._line_refs = [[0, 0]];
-    this._line_fnames = [""];
-    this._line_instr_count = 0;
-    //version
-    buffer.readUInt32BE(offset); offset += 4;
-    //flags
-    buffer.readUInt32BE(offset); offset += 4;
-    //line_instr_count
-    this._line_instr_count = buffer.readUInt32BE(offset); offset += 4;
-    let num_line_refs = buffer.readUInt32BE(offset); offset += 4;
-    let num_filenames = buffer.readUInt32BE(offset); offset += 4;
-
-    let fname_index = 0;
-
-    while (num_line_refs-- > 0) {
-      let term = this.readTerm(buffer, offset);
-      offset = term.offset;
-
-      if (term.tag === tags.TAG_ATOM) {
-        num_line_refs++;
-        fname_index = term.data;
+      if (count === 0) {
+        section.empty = true;
+        return;
       }
-      else {
-        this._line_refs.push([fname_index, term.data]);
+
+      offset += 4;
+
+      while (count-- > 0) {
+        let atom_index = buffer.readUInt32BE(offset); offset += 4;
+        let arity = buffer.readUInt32BE(offset); offset += 4;
+        let code_position = buffer.readUInt32BE(offset); offset += 4;
+        let index = buffer.readUInt32BE(offset); offset += 4;
+        let n_free = buffer.readInt32BE(offset); offset += 4;
+        let ouniq = buffer.readUInt32BE(offset); offset += 4;
+
+        this._functions.push({
+          atom: atom_index,
+          arity: arity,
+          code: code_position,
+          index: index,
+          free: n_free,
+          ouniq: ouniq
+        });
       }
     }
+  }
 
-    while (num_filenames-- > 0) {
-      let size = buffer.readUInt16BE(offset); offset += 2;
-      let filename = buffer.toString('utf8', offset, offset + size);
-      offset += size;
-      this._line_fnames.push(filename);
+  readLineSection(buffer: Buffer) {
+
+    if ('line' in this.sections) {
+      let section = this.sections['line'];
+      section.name = 'Line Numbers (Line)';
+      let offset = section.start;
+
+      this.lineRefs = [[0, 0]];
+      this.lineFNames = [""];
+      this.lineInstrCount = 0;
+      //version
+      buffer.readUInt32BE(offset); offset += 4;
+      //flags
+      buffer.readUInt32BE(offset); offset += 4;
+      //line_instr_count
+      this.lineInstrCount = buffer.readUInt32BE(offset); offset += 4;
+      let num_line_refs = buffer.readUInt32BE(offset); offset += 4;
+      let num_filenames = buffer.readUInt32BE(offset); offset += 4;
+
+      let fname_index = 0;
+
+      while (num_line_refs-- > 0) {
+        let term = this.readTerm(buffer, offset);
+        offset = term.offset;
+
+        if (term.tag === tags.TAG_ATOM) {
+          num_line_refs++;
+          fname_index = term.data;
+        }
+        else {
+          this.lineRefs.push([fname_index, term.data]);
+        }
+      }
+
+      while (num_filenames-- > 0) {
+        let size = buffer.readUInt16BE(offset); offset += 2;
+        let filename = buffer.toString('utf8', offset, offset + size);
+        offset += size;
+        this.lineFNames.push(filename);
+      }
     }
   }
 
-  readLiteralsChunk(buffer: Buffer, offset: number, length: number) {
+  readLittSection(buffer: Buffer) {
 
-    buffer.readUInt32BE(offset); offset += 4; //uncompressedSize
+    if ('litt' in this.sections) {
 
-    let chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
+      let section = this.sections['litt'];
+      section.name = 'Literals (LitT)';
+      let offset = section.start;
+      let length = section.length;
 
-    let numValues = chunk.readUInt32BE(0);
+      buffer.readUInt32BE(offset); offset += 4; //uncompressedSize
 
-    offset = 4;
-    while (numValues-- > 0) {
-      //Ignore "skip" UInt32 value and "marker" byte"
-      offset += 5;
-      let tag = chunk.readUInt8(offset);
-      let obj = this.readObject(tag, chunk, offset + 1);
-      offset = obj.offset;
-      this._literals.push(obj.data);
+      let chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
+
+      let numValues = chunk.readUInt32BE(0);
+
+      offset = 4;
+      while (numValues-- > 0) {
+        //Ignore "skip" UInt32 value and "marker" byte"
+        offset += 5;
+        let tag = chunk.readUInt8(offset);
+        let obj = this.readObject(tag, chunk, offset + 1);
+        offset = obj.offset;
+        this.literals.push(obj.data);
+      }
     }
   }
 
-  readAttributesChunk(buffer: Buffer, offset: number) {
-    //let marker = buffer.readUInt8(offset);
-    let tag = buffer.readUInt8(offset + 1);
-    this._attributes = this.readObject(tag, buffer, offset + 2).data;
-  }
-
-  readCompilationInfoChunk(buffer: Buffer, offset: number) {
-    //let marker = buffer.readUInt8(offset);
-    let tag = buffer.readUInt8(offset + 1);
-    this._compilationInfo = this.readObject(tag, buffer, offset + 2).data;
-  }
-
-  readStringChunk(buffer: Buffer, offset: number, length: number) {
-    this._str = buffer.toString('utf8', offset, offset + length);
-  }
-
-  readImportChunk(buffer: Buffer, offset: number) {
-
-    this._imports = [];
-
-    let nImports = buffer.readUInt32BE(offset);
-    offset += 4;
-
-    while (nImports-- > 0) {
-      let module = buffer.readUInt32BE(offset); offset += 4;
-      let func = buffer.readUInt32BE(offset); offset += 4;
-      let arity = buffer.readUInt32BE(offset); offset += 4;
-
-      this._imports.push({ module: module, function: func, arity: arity });
+  readAttrSection(buffer: Buffer) {
+    if( 'attr' in this.sections ){
+      let section = this.sections['attr'];
+      section.name = 'Attributes (Attr)';
+      let offset = section.start;
+      //let marker = buffer.readUInt8(offset);
+      let tag = buffer.readUInt8(offset + 1);
+      this.attributes = this.readObject(tag, buffer, offset + 2).data;
     }
   }
 
-  readExportChunk(buffer: Buffer, offset: number) {
-
-    this._exports = [];
-
-    let nExport = buffer.readUInt32BE(offset);
-    offset += 4;
-
-
-    while (nExport-- > 0) {
-      let func = buffer.readUInt32BE(offset); offset += 4;
-      let arity = buffer.readUInt32BE(offset); offset += 4;
-      let label = buffer.readUInt32BE(offset); offset += 4;
-
-      this._exports.push({ function: func, arity: arity, label: label });
+  readCInfSection(buffer: Buffer) {
+    if('cinf' in this.sections){
+      let section = this.sections['cinf'];
+      section.name = 'Compilation Info (CInf)';
+      let offset = section.start;
+      //let marker = buffer.readUInt8(offset);
+      let tag = buffer.readUInt8(offset + 1);
+      this.compilationInfo = this.readObject(tag, buffer, offset + 2).data;
     }
   }
 
-  readLocalChunk(buffer: Buffer, offset: number) {
+  readStrtSection(buffer: Buffer) {
+    if ('strt' in this.sections) {
+      let section = this.sections['strt'];
+      section.name = 'Strings (StrT)';
 
-    this._locals = [];
-
-    let nLocals = buffer.readUInt32BE(offset);
-    offset += 4;
-
-    while (nLocals-- > 0) {
-      let func = buffer.readUInt32BE(offset); offset += 4;
-      let arity = buffer.readUInt32BE(offset); offset += 4;
-      let label = buffer.readUInt32BE(offset); offset += 4;
-
-      this._locals.push({ function: func, arity: arity, label: label });
+      let length = section.length;
+      if (length === 0) {
+        section.empty = true;
+        return;
+      }
+      let offset = section.start;
+      this.StrT = buffer.toString('utf8', offset, offset + length);
     }
   }
 
-  readCodeChunk(buffer: Buffer, offset: number, length: number) {
-    this._codeExtraFields = buffer.readUInt32BE(offset); offset += 4;
-    this._codeInstructionSet = buffer.readUInt32BE(offset); offset += 4;
-    this._codeHighestOpcode = buffer.readUInt32BE(offset); offset += 4;
-    this._codeNumberOfLabels = buffer.readUInt32BE(offset); offset += 4;
-    this._codeNumberOfFunctions = buffer.readUInt32BE(offset); offset += 4;
+  readImptSection(buffer: Buffer) {
 
-    this.readBeamVmCode(buffer, offset, length - 20);
-  }
+    if( 'impt' in this.sections )
+    {
+      let section = this.sections['impt'];
+      section.name = 'Imports (ImpT)';
+      this.imports = [];
 
-  readAttomsChunk(buffer: Buffer, offset: number, utf: boolean) {
+      let offset = section.start;
+      let nImports = buffer.readUInt32BE(offset);
 
-    let nAtoms = buffer.readUInt32BE(offset);
-    offset += 4;
+      if( nImports === 0){
+        section.empty = true;
+        return;
+      }
 
-    while (nAtoms-- > 0) {
-      let atomLength = buffer.readUInt8(offset);
-      let atom = buffer.toString(utf ? 'utf8' : 'latin1', offset + 1, offset + 1 + atomLength);
-      offset = offset + 1 + atomLength;
-      this._atoms.push(atom);
+      offset += 4;
+
+      while (nImports-- > 0) {
+        let module = buffer.readUInt32BE(offset); offset += 4;
+        let func = buffer.readUInt32BE(offset); offset += 4;
+        let arity = buffer.readUInt32BE(offset); offset += 4;
+
+        this.imports.push({ module: module, function: func, arity: arity });
+      }
     }
   }
+
+  readExptSection(buffer: Buffer) {
+
+    if ('expt' in this.sections) {
+
+      this.exports = [];
+
+      let section = this.sections['expt'];
+      section.name = 'Exports (ExpT)';
+      let offset = section.start;
+      let nExport = buffer.readUInt32BE(offset);
+      
+      if( nExport === 0){
+        section.empty = true;
+        return;
+      }
+      
+      offset += 4;
+
+      while (nExport-- > 0) {
+        let func = buffer.readUInt32BE(offset); offset += 4;
+        let arity = buffer.readUInt32BE(offset); offset += 4;
+        let label = buffer.readUInt32BE(offset); offset += 4;
+
+        this.exports.push({ function: func, arity: arity, label: label });
+      }
+    }
+  }
+
+  readLoctSection(buffer: Buffer) {
+
+    if ('loct' in this.sections) {
+      this.LocT = [];
+
+      let section = this.sections['loct'];
+      section.name = 'Local Functions (LocT)';
+
+      let offset = section.start;
+
+      let nLocals = buffer.readUInt32BE(offset);
+
+      if (nLocals === 0) {
+        section.empty = true;
+        return;
+      }
+
+      offset += 4;
+
+      while (nLocals-- > 0) {
+        let func = buffer.readUInt32BE(offset); offset += 4;
+        let arity = buffer.readUInt32BE(offset); offset += 4;
+        let label = buffer.readUInt32BE(offset); offset += 4;
+
+        this.LocT.push({ function: func, arity: arity, label: label });
+      }
+    }
+  }
+
+  readCodeSection(buffer: Buffer) {
+    if ('code' in this.sections) {
+      let section = this.sections['code'];
+      section.name = 'Code section (Code)';
+      let offset = section.start;
+      let length = section.length;
+
+      this._codeExtraFields = buffer.readUInt32BE(offset); offset += 4;
+      this._codeInstructionSet = buffer.readUInt32BE(offset); offset += 4;
+      this._codeHighestOpcode = buffer.readUInt32BE(offset); offset += 4;
+      this.codeNumberOfLabels = buffer.readUInt32BE(offset); offset += 4;
+      this._codeNumberOfFunctions = buffer.readUInt32BE(offset); offset += 4;
+
+      this.readBeamVmCode(buffer, offset, length - 20);
+    }
+  }
+
+  readAtu8Section(buffer: Buffer) {
+    if( 'atu8' in this.sections )
+    {
+      let section = this.sections['atu8'];
+      section.name = 'Atoms (AtU8)';
+      let offset = section.start;
+
+      let nAtoms = buffer.readUInt32BE(offset);
+      if( nAtoms === 0){
+        section.empty = 0;
+        return;
+      }
+
+      offset += 4;
+
+      while (nAtoms-- > 0) {
+        let atomLength = buffer.readUInt8(offset);
+        let atom = buffer.toString('utf8', offset + 1, offset + 1 + atomLength);
+        offset = offset + 1 + atomLength;
+        this.atoms.push(atom);
+      }
+    }
+  }
+
+  readAtomSection(buffer: Buffer) {
+    if( 'atom' in this.sections )
+    {
+      let section = this.sections['atom'];
+      section.name = 'Atoms (Atom)';
+      let offset = section.start;
+
+      let nAtoms = buffer.readUInt32BE(offset);
+      if( nAtoms === 0){
+        section.empty = 0;
+        return;
+      }
+
+      offset += 4;
+
+      while (nAtoms-- > 0) {
+        let atomLength = buffer.readUInt8(offset);
+        let atom = buffer.toString('latin1', offset + 1, offset + 1 + atomLength);
+        offset = offset + 1 + atomLength;
+        this.atoms.push(atom);
+      }
+    }
+  }  
 
   //TODO: implement the rest of the terms
   readObject(tag: number, buffer: Buffer, offset: number): any {
 
     switch (tag) {
+      case 70: {
+        return { data: "float8bytes", offset: offset + 8};
+      }
       case 97:
         return { data: buffer.readUInt8(offset), offset: offset + 1 };
       case 98:
@@ -428,13 +549,13 @@ export default class BeamFile {
       let keyObj = this.readObject(keyTag, buffer, offset);
       offset = keyObj.offset;
 
-      console.log(`${keyObj.data}`);
+      //console.log(`${keyObj.data}`);
 
       let valTag = buffer.readUInt8(offset++);
       let valObj = this.readObject(valTag, buffer, offset);
       offset = valObj.offset;
 
-      console.log(`${valObj.data}`);
+      //console.log(`${valObj.data}`);
 
       //Add object to the map
     }
@@ -658,7 +779,7 @@ export default class BeamFile {
         continue;
       }
       
-      this._code.push({ op: byteCode, params: list, label: label, line: line });
+      this.code.push({ op: byteCode, params: list, label: label, line: line });
       line = null;
       label = null;
     }

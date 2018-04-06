@@ -18,31 +18,125 @@ import * as vscode from 'vscode';
 
 import BeamDasmContentProvider from './contentProvider';
 import BeamDasmHoverProvider from './hoverProvider';
+import BeamFilesProvider from './beamFilesProvider';
+
+import * as fs from 'fs';
+import * as path from 'path';
 
 export function activate(context: vscode.ExtensionContext) {
 
-    vscode.languages.registerHoverProvider("beamdasm", new BeamDasmHoverProvider());
-    vscode.workspace.registerTextDocumentContentProvider("beamdasm", new BeamDasmContentProvider());
-    //vscode.languages.registerHoverProvider("beam", new BeamDasmHoverProvider());
-    //vscode.workspace.registerTextDocumentContentProvider("beam", new BeamDasmContentProvider());
+    const rootPath = vscode.workspace.rootPath;
 
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider("beam", new BeamDasmHoverProvider())
+    );
+
+    let contentProvider = new BeamDasmContentProvider();
+
+    let supportedSections = [
+        "code",
+        "impt",
+        "expt",
+        "atom",
+        "atu8",
+        "litt",
+        "loct",
+        "attr",
+        "strt"
+    ]
     
-    context.subscriptions.push(vscode.commands.registerCommand('beamdasm.disassemble', (fileUri) => {
-                      
-        if( !fileUri || !(fileUri instanceof vscode.Uri)) {
-            let editor = vscode.window.activeTextEditor;
+    supportedSections.forEach( (section:string) => {
+        context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(`beam${section}`, contentProvider));    
+    });
 
-            if (!editor) {
-                return;
+    let beamFilesProvider = new BeamFilesProvider(context, rootPath, supportedSections);
+    let command = vscode.commands.registerCommand('beamdasm.refreshBeamTree', () => beamFilesProvider.refresh());
+    context.subscriptions.push(command);
+
+    context.subscriptions.push(vscode.window.registerTreeDataProvider("beamdasm.beamFilesTree", beamFilesProvider));
+
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('beamdasm.disassemble', (fileUri, beamFile?: any) => {
+            if (!fileUri || !(fileUri instanceof vscode.Uri)) {
+                let editor = vscode.window.activeTextEditor;
+
+                if (!editor) {
+                    return;
+                }
+
+                fileUri = editor.document.uri;
             }
-                
-            fileUri = editor.document.uri;
-        }        
 
-        let beamDasmDocument = vscode.Uri.file(fileUri.fsPath.replace(".beam",".beamdasm"));
-        vscode.commands.executeCommand('vscode.open', beamDasmDocument.with( {scheme: 'beamdasm'} ));
-    }));
+            if (fs.existsSync(fileUri.fsPath)) {
+                let sectionDocument = vscode.Uri.file(fileUri.fsPath.replace('.beam','.beam_code'));
+                vscode.commands.executeCommand('vscode.open', sectionDocument.with({ scheme: 'beamcode' }));
+            }
+        }
+        )
+    );
+
+    setupDecorators(context);
+}
+
+function setupDecorators(context: vscode.ExtensionContext) {
+    const functionDecorationType = vscode.window.createTextEditorDecorationType({
+        light: {
+            gutterIconPath: path.join(__filename, '..', '..', 'resources', 'light', 'func.svg')
+        },
+        dark: {
+            gutterIconPath: path.join(__filename, '..', '..', 'resources', 'dark', 'func.svg')
+        },
+        gutterIconSize: "16px",
+    });
+
+    context.subscriptions.push(functionDecorationType);
+
+    let timeout: any = null;
+    function triggerUpdateDecorations() {
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        timeout = setTimeout(updateDecorations, 500);
+    }
+
+    let activeEditor = vscode.window.activeTextEditor;
+    
+    if (activeEditor) {
+        triggerUpdateDecorations();
+    }
+
+    vscode.window.onDidChangeActiveTextEditor( editor => {
+        activeEditor = editor;
+        if( editor ){
+            triggerUpdateDecorations();
+        }
+    });
+
+    function updateDecorations() {
+        if (!activeEditor) {
+            return;
+        }
+
+        if( activeEditor.document.uri.scheme !== "beamcode" ){
+            return;
+        }
+
+        const regEx = /\/\/Function/g;
+        const text = activeEditor.document.getText();
+
+        const ranges: vscode.DecorationOptions[] = [];
+        let match: any;
+        while (match = regEx.exec(text)) {
+            const startPos = activeEditor.document.positionAt(match.index);
+            const endPos = activeEditor.document.positionAt(match.index + match[0].length);
+            const decoration = { range: new vscode.Range(startPos, endPos) };
+            ranges.push(decoration);
+        }
+        activeEditor.setDecorations(functionDecorationType, ranges);
+    }
 }
 
 export function deactivate() {
+    console.log('BEAMdasm is deactivated');
 }

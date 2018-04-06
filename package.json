@@ -28,6 +28,7 @@
     },
     "preview": true,
     "activationEvents": [
+        "onView:beamdasm.beamFilesTree",
         "onCommand:beamdasm.disassemble"
     ],
     "main": "./out/extension",
@@ -36,35 +37,53 @@
             {
                 "id": "beam",
                 "extensions": [
-                    ".beam"
-                ]
-            },
-            {
-                "id": "beamdasm",
-                "extensions": [
-                    ".beamdasm"
+                    ".beam",
+                    ".beam_code"
                 ]
             }
         ],
         "grammars": [
             {
-                "language": "beamdasm",
+                "language": "beam",
                 "scopeName": "source.beamdasm",
                 "path": "./syntaxes/beamdasm.tmLanguage.json"
-            }
+            }            
         ],
         "commands": [
             {
                 "when": "resourceLangId == beam",
                 "command": "beamdasm.disassemble",
                 "title": "Disassemble BEAM"
-            }            
+            },
+            {
+                "command": "beamdasm.refreshBeamTree",
+                "title": "Refresh",
+                "icon": {
+                    "light": "resources/light/refresh.svg",
+                    "dark": "resources/dark/refresh.svg"
+                }
+            }
         ],
+        "views": {
+            "explorer": [
+                {
+                    "id": "beamdasm.beamFilesTree",
+                    "name": "BEAM files"
+                }
+            ]
+        },
         "menus": {
             "explorer/context": [
                 {
                     "when": "resourceLangId == beam",
                     "command": "beamdasm.disassemble"
+                }
+            ],
+            "view/title": [
+                {
+                    "when": "view == beamdasm.beamFilesTree",
+                    "command": "beamdasm.refreshBeamTree",
+                    "group": "navigation"
                 }
             ]
         }

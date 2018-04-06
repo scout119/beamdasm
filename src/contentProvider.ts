@@ -14,31 +14,59 @@
 
 'use strict';
 
-import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as vscode from 'vscode';
 import BeamFile from './beam/beamFile';
+import { BeamdasmFormatter } from './beamdasmFormatter';
+
+/// <reference path="interface.ts"/>
+/// <reference path="beamdasmFormatter.ts"/>
 
 
-import { formatCode } from './codeFormatter';
 
 export default class BeamDasmContentProvider implements vscode.TextDocumentContentProvider {
 
+  formatter: beamdasm.BeamBytecodeFormatter;
+  constructor(){
+    this.formatter = new BeamdasmFormatter();
+  }
+
   public provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
-    
+
+    if(token.isCancellationRequested){
+      return;
+    }
+
     if( !uri || !(uri instanceof vscode.Uri)){
       return;
     }
     
-    let beamFile : string = uri.fsPath.replace(".beamdasm", ".beam");
-
-    if( !(fs.existsSync(beamFile)) ){
+    let beamFilePath : string = uri.fsPath.substr(0,uri.fsPath.length-5);
+        
+    if( !fs.existsSync(beamFilePath) ){
       return;
     }
 
-    let bm = BeamFile.fromFile(beamFile);
+    let beamFile = BeamFile.fromFile(beamFilePath);
 
-    //TODO: Introduce configurable formatter to have different ways to show
-    //      disassembler code. similar to ILDASM, erlang .S style, etc.
-    return formatCode(bm);
+    let str = '';
+
+    function formatSection(formatter: beamdasm.BeamBytecodeFormatter, section: string): string {
+      let str = '';
+        
+      if( section in beamFile.sections ){
+        let funcName = `format${section}`;
+        str = 'BEAM section is missing formatting function';
+        if( funcName in formatter ){          
+          str = formatter[funcName](beamFile);
+        }      
+      }
+      return str;
+    }    
+
+    let section = uri.scheme.substr(4,4);
+    str = formatSection(this.formatter, section);
+    
+    return str;
   }
 }
