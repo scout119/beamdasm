@@ -14,19 +14,22 @@
 
 'use strict';
 
-import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as vscode from 'vscode';
 import BeamFile from './beam/beamFile';
+import { DasmFormatter } from './codeFormatter';
+
+/// <reference path="interface.ts"/>
+/// <reference path="codeFormatter.ts"/>
 
 
-import { 
-  formatCode, 
-  printImportTable, 
-  printModuleInfo,
-  printExportTable,
-} from './codeFormatter';
 
 export default class BeamDasmContentProvider implements vscode.TextDocumentContentProvider {
+
+  formatter: beamdasm.BeamBytecodeFormatter;
+  constructor(){
+    this.formatter = new DasmFormatter();
+  }
 
   public provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
 
@@ -41,11 +44,8 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
     
     let beamFile : string = uri.fsPath;//.replace(".beamdasm", ".beam");
 
-    if(uri.scheme !== 'beamdasm'){
-      beamFile = beamFile.substr(0,beamFile.length-5);
-    }
-
-
+    
+    beamFile = beamFile.substr(0,beamFile.length-5);    
     if( !fs.existsSync(beamFile) ){
       return;
     }
@@ -59,15 +59,27 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
     //TODO: Introduce configurable formatter to have different ways to show
     //      disassembler code. similar to ILDASM, erlang .S style, etc.
     if(uri.scheme === 'beamimpt'){
-      str += printModuleInfo(bm);
-      str += printImportTable(bm);
+      str += this.formatter.formatModuleInfo(bm);
+      str += this.formatter.formatImportTable(bm);
     }
     else if(uri.scheme === 'beamexpt'){
-      str += printModuleInfo(bm);
-      str += printExportTable(bm);
+      str += this.formatter.formatModuleInfo(bm);
+      str += this.formatter.formatExportTable(bm);
+    }
+    else if(uri.scheme === 'beamatom') {
+      str += this.formatter.formatModuleInfo(bm);
+      str += this.formatter.formatAtomsTable(bm);      
     }
     else{
-      let content = formatCode(bm);
+
+      // for (const key in bm._chunks) {
+      //   if (bm._chunks.hasOwnProperty(key)) {
+      //     const element = bm._chunks[key];
+      //     console.log(key);
+      //   }
+      // }
+
+      let content = this.formatter.formatCode(bm);
       str = content.str;
     }
 

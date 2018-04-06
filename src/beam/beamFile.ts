@@ -22,25 +22,32 @@ import Tuple from './terms/tuple';
 import { opcodes } from './opcodes';
 import * as tags from './tags';
 
+/// <reference path="interface.ts"/>
 
-export default class BeamFile {
+export default class BeamFile implements beamdasm.IBeamFile {
 
-  _code: any[] = [];
+  readonly code: any[] = [];
   _codeNumberOfFunctions: number = 0;
-  _codeNumberOfLabels: number = 0;
+  codeNumberOfLabels: number = 0;
   _codeHighestOpcode: number = 0;
   _codeInstructionSet: number = 0;
   _codeExtraFields: number = 0;
 
-  _atoms: string[] = ["nil"];
-  _imports: any[] = [];
-  _exports: any[] = [];
+  atoms: string[] = ["nil"];
+  imports: any[] = [];
+  exports: any[] = [];
   _locals: any[] = [];
   _str: string = "";
 
-  _literals: any[] = [];
-  _attributes: any;
-  _compilationInfo: any;
+  literals: any[] = [];
+  attributes: any;
+  compilationInfo: any;
+
+
+  lineRefs: any[] = [];
+  lineFNames: any[] = [];
+  lineInstrCount: number = 0;
+
 
   static fromFile(filePath: string): BeamFile {
 
@@ -86,7 +93,7 @@ export default class BeamFile {
       offset = offset + 8 + (((size + 3)>>2)<<2);
     }
 
-    this._atoms = ['nil'];
+    this.atoms = ['nil'];
 
     if( 'atu8' in this._chunks ){
       this.readAttomsChunk(buffer, this._chunks['atu8'].start, true);
@@ -219,21 +226,17 @@ export default class BeamFile {
     }
   }
 
-  _line_refs: any[] = [];
-  _line_fnames: any[] = [];
-  _line_instr_count: number = 0;
-
   readLineChunk(buffer: Buffer, offset: number) {
 
-    this._line_refs = [[0, 0]];
-    this._line_fnames = [""];
-    this._line_instr_count = 0;
+    this.lineRefs = [[0, 0]];
+    this.lineFNames = [""];
+    this.lineInstrCount = 0;
     //version
     buffer.readUInt32BE(offset); offset += 4;
     //flags
     buffer.readUInt32BE(offset); offset += 4;
     //line_instr_count
-    this._line_instr_count = buffer.readUInt32BE(offset); offset += 4;
+    this.lineInstrCount = buffer.readUInt32BE(offset); offset += 4;
     let num_line_refs = buffer.readUInt32BE(offset); offset += 4;
     let num_filenames = buffer.readUInt32BE(offset); offset += 4;
 
@@ -248,7 +251,7 @@ export default class BeamFile {
         fname_index = term.data;
       }
       else {
-        this._line_refs.push([fname_index, term.data]);
+        this.lineRefs.push([fname_index, term.data]);
       }
     }
 
@@ -256,7 +259,7 @@ export default class BeamFile {
       let size = buffer.readUInt16BE(offset); offset += 2;
       let filename = buffer.toString('utf8', offset, offset + size);
       offset += size;
-      this._line_fnames.push(filename);
+      this.lineFNames.push(filename);
     }
   }
 
@@ -275,20 +278,20 @@ export default class BeamFile {
       let tag = chunk.readUInt8(offset);
       let obj = this.readObject(tag, chunk, offset + 1);
       offset = obj.offset;
-      this._literals.push(obj.data);
+      this.literals.push(obj.data);
     }
   }
 
   readAttributesChunk(buffer: Buffer, offset: number) {
     //let marker = buffer.readUInt8(offset);
     let tag = buffer.readUInt8(offset + 1);
-    this._attributes = this.readObject(tag, buffer, offset + 2).data;
+    this.attributes = this.readObject(tag, buffer, offset + 2).data;
   }
 
   readCompilationInfoChunk(buffer: Buffer, offset: number) {
     //let marker = buffer.readUInt8(offset);
     let tag = buffer.readUInt8(offset + 1);
-    this._compilationInfo = this.readObject(tag, buffer, offset + 2).data;
+    this.compilationInfo = this.readObject(tag, buffer, offset + 2).data;
   }
 
   readStringChunk(buffer: Buffer, offset: number, length: number) {
@@ -297,7 +300,7 @@ export default class BeamFile {
 
   readImportChunk(buffer: Buffer, offset: number) {
 
-    this._imports = [];
+    this.imports = [];
 
     let nImports = buffer.readUInt32BE(offset);
     offset += 4;
@@ -307,13 +310,13 @@ export default class BeamFile {
       let func = buffer.readUInt32BE(offset); offset += 4;
       let arity = buffer.readUInt32BE(offset); offset += 4;
 
-      this._imports.push({ module: module, function: func, arity: arity });
+      this.imports.push({ module: module, function: func, arity: arity });
     }
   }
 
   readExportChunk(buffer: Buffer, offset: number) {
 
-    this._exports = [];
+    this.exports = [];
 
     let nExport = buffer.readUInt32BE(offset);
     offset += 4;
@@ -324,7 +327,7 @@ export default class BeamFile {
       let arity = buffer.readUInt32BE(offset); offset += 4;
       let label = buffer.readUInt32BE(offset); offset += 4;
 
-      this._exports.push({ function: func, arity: arity, label: label });
+      this.exports.push({ function: func, arity: arity, label: label });
     }
   }
 
@@ -348,7 +351,7 @@ export default class BeamFile {
     this._codeExtraFields = buffer.readUInt32BE(offset); offset += 4;
     this._codeInstructionSet = buffer.readUInt32BE(offset); offset += 4;
     this._codeHighestOpcode = buffer.readUInt32BE(offset); offset += 4;
-    this._codeNumberOfLabels = buffer.readUInt32BE(offset); offset += 4;
+    this.codeNumberOfLabels = buffer.readUInt32BE(offset); offset += 4;
     this._codeNumberOfFunctions = buffer.readUInt32BE(offset); offset += 4;
 
     this.readBeamVmCode(buffer, offset, length - 20);
@@ -363,7 +366,7 @@ export default class BeamFile {
       let atomLength = buffer.readUInt8(offset);
       let atom = buffer.toString(utf ? 'utf8' : 'latin1', offset + 1, offset + 1 + atomLength);
       offset = offset + 1 + atomLength;
-      this._atoms.push(atom);
+      this.atoms.push(atom);
     }
   }
 
@@ -670,7 +673,7 @@ export default class BeamFile {
         continue;
       }
       
-      this._code.push({ op: byteCode, params: list, label: label, line: line });
+      this.code.push({ op: byteCode, params: list, label: label, line: line });
       line = null;
       label = null;
     }

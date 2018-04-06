@@ -14,9 +14,9 @@
 
 'use strict';
 
-import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as vscode from 'vscode';
 import BeamFile from './beam/beamFile';
 
 export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode.TreeItem> {

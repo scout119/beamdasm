@@ -28,11 +28,11 @@ export function activate(context: vscode.ExtensionContext) {
     const rootPath = vscode.workspace.rootPath;
 
     context.subscriptions.push(
-        vscode.languages.registerHoverProvider("beamdasm", new BeamDasmHoverProvider())
+        vscode.languages.registerHoverProvider("beam", new BeamDasmHoverProvider())
     );
 
     let contentProvider = new BeamDasmContentProvider();
-    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamdasm", contentProvider));
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamcode", contentProvider));
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamimpt", contentProvider));
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamexpt", contentProvider));
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("beamatom", contentProvider));
@@ -60,7 +60,8 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             if (fs.existsSync(fileUri.fsPath)) {
-                vscode.commands.executeCommand('vscode.open', fileUri.with({ scheme: 'beamdasm' }));
+                let sectionDocument = vscode.Uri.file(fileUri.fsPath.replace(".beam",`.beam_code`));
+                vscode.commands.executeCommand('vscode.open', sectionDocument.with({ scheme: 'beamcode' }));
             }
         }
         )
@@ -108,7 +109,7 @@ function setupDecorators(context: vscode.ExtensionContext) {
             return;
         }
 
-        if( activeEditor.document.uri.scheme !== "beamdasm" ){
+        if( activeEditor.document.uri.scheme !== "beamcode" ){
             return;
         }
 
