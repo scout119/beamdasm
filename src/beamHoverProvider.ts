@@ -17,7 +17,7 @@
 import * as vscode from 'vscode';
 import { get_doc } from './beam/opcodes';
 
-export default class BeamDasmHoverProvider implements vscode.HoverProvider {
+export default class BeamHoverProvider implements vscode.HoverProvider {
 
   provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
 

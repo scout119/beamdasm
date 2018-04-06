@@ -38,8 +38,7 @@ namespace beamdasm {
     codeNumberOfLabels: number;
   }
   export interface BeamBytecodeFormatter {
-    
-    formatModuleInfo(beamFile: IBeamFile): string;
+        
     formatcode(beamFile: IBeamFile): string;    
     formatlitt(beamFile: IBeamFile): string;
     formatatu8(beamFile: IBeamFile) :string;

@@ -19,7 +19,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import BeamFile from './beam/beamFile';
 
-export default class BeamFilesProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 
   private _didChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
   readonly onDidChangeTreeData?: vscode.Event<vscode.TreeItem | undefined> = this._didChangeTreeData.event;

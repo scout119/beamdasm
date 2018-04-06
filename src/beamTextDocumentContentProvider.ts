@@ -18,17 +18,21 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import BeamFile from './beam/beamFile';
 import { BeamdasmFormatter } from './beamdasmFormatter';
+import { ErlangFormatter } from './erlangFormatter';
 
 /// <reference path="interface.ts"/>
 /// <reference path="beamdasmFormatter.ts"/>
+/// <reference path="erlangFormatter.ts"/>
 
 
 
-export default class BeamDasmContentProvider implements vscode.TextDocumentContentProvider {
+export default class BeamTextDocumentContentProvider implements vscode.TextDocumentContentProvider {
 
-  formatter: beamdasm.BeamBytecodeFormatter;
+  formatters: { [s: string]: beamdasm.BeamBytecodeFormatter; } = {};
+
   constructor(){
-    this.formatter = new BeamdasmFormatter();
+    this.formatters['erlang'] = new ErlangFormatter();
+    this.formatters['beamdasm'] = new BeamdasmFormatter();
   }
 
   public provideTextDocumentContent(uri: vscode.Uri, token: vscode.CancellationToken): vscode.ProviderResult<string> {
@@ -62,10 +66,13 @@ export default class BeamDasmContentProvider implements vscode.TextDocumentConte
         }      
       }
       return str;
-    }    
+    }
+
+    let configuration = vscode.workspace.getConfiguration('beamdasm');
+    let formatterToUse = configuration['formatter'];
 
     let section = uri.scheme.substr(4,4);
-    str = formatSection(this.formatter, section);
+    str = formatSection(this.formatters[formatterToUse], section);
     
     return str;
   }

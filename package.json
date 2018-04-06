@@ -86,6 +86,21 @@
                     "group": "navigation"
                 }
             ]
+        },
+        "configuration": {
+            "type": "object",
+            "title": "BEAMDasm extension configuration",
+            "properties": {
+                "beamdasm.formatter" : {
+                    "type": "string",
+                    "default": "beamdasm",
+                    "description": "Bytecode formatter to use",
+                    "enum": [
+                        "beamdasm",
+                        "erlang"
+                    ]
+                }
+            }
         }
     },
     "scripts": {

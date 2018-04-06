@@ -16,9 +16,9 @@
 
 import * as vscode from 'vscode';
 
-import BeamDasmContentProvider from './contentProvider';
-import BeamDasmHoverProvider from './hoverProvider';
-import BeamFilesProvider from './beamFilesProvider';
+import BeamTextDocumentContentProvider from './beamTextDocumentContentProvider';
+import BeamHoverProvider from './beamHoverProvider';
+import BeamTreeDataProvider from './beamTreeDataProvider';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -27,11 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const rootPath = vscode.workspace.rootPath;
 
-    context.subscriptions.push(
-        vscode.languages.registerHoverProvider("beam", new BeamDasmHoverProvider())
-    );
-
-    let contentProvider = new BeamDasmContentProvider();
+    context.subscriptions.push( vscode.languages.registerHoverProvider("beam", new BeamHoverProvider()));
 
     let supportedSections = [
         "code",
@@ -44,37 +40,33 @@ export function activate(context: vscode.ExtensionContext) {
         "attr",
         "strt"
     ];
-    
-    supportedSections.forEach( (section:string) => {
-        context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(`beam${section}`, contentProvider));    
+
+    let contentProvider = new BeamTextDocumentContentProvider();
+    supportedSections.forEach((section: string) => {
+        context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(`beam${section}`, contentProvider));
     });
 
-    let beamFilesProvider = new BeamFilesProvider(context, rootPath, supportedSections);
-    let command = vscode.commands.registerCommand('beamdasm.refreshBeamTree', () => beamFilesProvider.refresh());
-    context.subscriptions.push(command);
+    let beamTreeDataProvider = new BeamTreeDataProvider(context, rootPath, supportedSections);
+    context.subscriptions.push(vscode.window.registerTreeDataProvider("beamdasm.beamFilesTree", beamTreeDataProvider));
 
-    context.subscriptions.push(vscode.window.registerTreeDataProvider("beamdasm.beamFilesTree", beamFilesProvider));
+    context.subscriptions.push(vscode.commands.registerCommand('beamdasm.refreshBeamTree', () => beamTreeDataProvider.refresh()));
 
+    context.subscriptions.push(vscode.commands.registerCommand('beamdasm.disassemble', (fileUri, beamFile?: any) => {
+        if (!fileUri || !(fileUri instanceof vscode.Uri)) {
+            let editor = vscode.window.activeTextEditor;
 
-    context.subscriptions.push(
-        vscode.commands.registerCommand('beamdasm.disassemble', (fileUri, beamFile?: any) => {
-            if (!fileUri || !(fileUri instanceof vscode.Uri)) {
-                let editor = vscode.window.activeTextEditor;
-
-                if (!editor) {
-                    return;
-                }
-
-                fileUri = editor.document.uri;
+            if (!editor) {
+                return;
             }
 
-            if (fs.existsSync(fileUri.fsPath)) {
-                let sectionDocument = vscode.Uri.file(fileUri.fsPath.replace('.beam','.beam_code'));
-                vscode.commands.executeCommand('vscode.open', sectionDocument.with({ scheme: 'beamcode' }));
-            }
+            fileUri = editor.document.uri;
         }
-        )
-    );
+
+        if (fs.existsSync(fileUri.fsPath)) {
+            let sectionDocument = vscode.Uri.file(fileUri.fsPath.replace('.beam', '.beam_code'));
+            vscode.commands.executeCommand('vscode.open', sectionDocument.with({ scheme: 'beamcode' }));
+        }
+    }));
 
     setupDecorators(context);
 }
@@ -101,14 +93,14 @@ function setupDecorators(context: vscode.ExtensionContext) {
     }
 
     let activeEditor = vscode.window.activeTextEditor;
-    
+
     if (activeEditor) {
         triggerUpdateDecorations();
     }
 
-    vscode.window.onDidChangeActiveTextEditor( editor => {
+    vscode.window.onDidChangeActiveTextEditor(editor => {
         activeEditor = editor;
-        if( editor ){
+        if (editor) {
             triggerUpdateDecorations();
         }
     });
@@ -118,7 +110,7 @@ function setupDecorators(context: vscode.ExtensionContext) {
             return;
         }
 
-        if( activeEditor.document.uri.scheme !== "beamcode" ){
+        if (activeEditor.document.uri.scheme !== "beamcode") {
             return;
         }
 
