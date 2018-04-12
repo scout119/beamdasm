@@ -1,11 +1,11 @@
 // Copyright 2018 Valentin Ivanov (valen.ivanov@gmail.com)
-
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,8 +20,8 @@ import List from './terms/list';
 import Tuple from './terms/tuple';
 
 import { opcodes } from './opcodes';
-import * as tags from './tags';
 
+import * as Tags from './tags';
 /// <reference path="interface.ts"/>
 
 export default class BeamFile implements beamdasm.IBeamFile {
@@ -33,7 +33,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
   _codeInstructionSet: number = 0;
   _codeExtraFields: number = 0;
 
-  sections:any = {};
+  sections: any = {};
 
   atoms: string[] = ["nil"];
   imports: any[] = [];
@@ -79,25 +79,24 @@ export default class BeamFile implements beamdasm.IBeamFile {
 
     let offset = 12;
 
-    this.sections ={};
+    this.sections = {};
     //Quick scan to get chunks offsets and sizes
     //We want to read them in particular order, not the order
     //chunks are present in the file
-    while ( offset < length )
-    {
-      let name = buffer.toString('utf8', offset, offset+4);
-      let size = buffer.readUInt32BE(offset+4);
+    while (offset < length) {
+      let name = buffer.toString('utf8', offset, offset + 4);
+      let size = buffer.readUInt32BE(offset + 4);
 
-      this.sections[name.toLowerCase()] = {start: offset + 8, length: size};
+      this.sections[name.toLowerCase()] = { start: offset + 8, length: size };
 
-      offset = offset + 8 + (((size + 3)>>2)<<2);
+      offset = offset + 8 + (((size + 3) >> 2) << 2);
     }
 
     this.atoms = ['nil'];
 
-    
+
     this.readAtu8Section(buffer);
-    this.readAtomSection(buffer);          
+    this.readAtomSection(buffer);
     this.readImptSection(buffer);
     this.readExptSection(buffer);
     this.readFuntSection(buffer);
@@ -107,13 +106,13 @@ export default class BeamFile implements beamdasm.IBeamFile {
     this.readAttrSection(buffer);
     this.readLittSection(buffer);
     this.readLineSection(buffer);
-    
 
-    if( 'catt' in this.sections ){
+
+    if ('catt' in this.sections) {
       console.log('Found CatT chunk');
     }
 
-    if( 'abst' in this.sections ){
+    if ('abst' in this.sections) {
       console.log('Found Abst chunk');
     }
 
@@ -244,7 +243,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
         let term = this.readTerm(buffer, offset);
         offset = term.offset;
 
-        if (term.tag === tags.TAG_ATOM) {
+        if (term.tag === Tags.TAG_ATOM) {
           num_line_refs++;
           fname_index = term.data;
         }
@@ -290,7 +289,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
   }
 
   readAttrSection(buffer: Buffer) {
-    if( 'attr' in this.sections ){
+    if ('attr' in this.sections) {
       let section = this.sections['attr'];
       section.name = 'Attributes (Attr)';
       let offset = section.start;
@@ -301,7 +300,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
   }
 
   readCInfSection(buffer: Buffer) {
-    if('cinf' in this.sections){
+    if ('cinf' in this.sections) {
       let section = this.sections['cinf'];
       section.name = 'Compilation Info (CInf)';
       let offset = section.start;
@@ -328,8 +327,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
 
   readImptSection(buffer: Buffer) {
 
-    if( 'impt' in this.sections )
-    {
+    if ('impt' in this.sections) {
       let section = this.sections['impt'];
       section.name = 'Imports (ImpT)';
       this.imports = [];
@@ -337,7 +335,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
       let offset = section.start;
       let nImports = buffer.readUInt32BE(offset);
 
-      if( nImports === 0){
+      if (nImports === 0) {
         section.empty = true;
         return;
       }
@@ -364,12 +362,12 @@ export default class BeamFile implements beamdasm.IBeamFile {
       section.name = 'Exports (ExpT)';
       let offset = section.start;
       let nExport = buffer.readUInt32BE(offset);
-      
-      if( nExport === 0){
+
+      if (nExport === 0) {
         section.empty = true;
         return;
       }
-      
+
       offset += 4;
 
       while (nExport-- > 0) {
@@ -429,14 +427,13 @@ export default class BeamFile implements beamdasm.IBeamFile {
   }
 
   readAtu8Section(buffer: Buffer) {
-    if( 'atu8' in this.sections )
-    {
+    if ('atu8' in this.sections) {
       let section = this.sections['atu8'];
       section.name = 'Atoms (AtU8)';
       let offset = section.start;
 
       let nAtoms = buffer.readUInt32BE(offset);
-      if( nAtoms === 0){
+      if (nAtoms === 0) {
         section.empty = 0;
         return;
       }
@@ -453,14 +450,13 @@ export default class BeamFile implements beamdasm.IBeamFile {
   }
 
   readAtomSection(buffer: Buffer) {
-    if( 'atom' in this.sections )
-    {
+    if ('atom' in this.sections) {
       let section = this.sections['atom'];
       section.name = 'Atoms (Atom)';
       let offset = section.start;
 
       let nAtoms = buffer.readUInt32BE(offset);
-      if( nAtoms === 0){
+      if (nAtoms === 0) {
         section.empty = 0;
         return;
       }
@@ -474,14 +470,14 @@ export default class BeamFile implements beamdasm.IBeamFile {
         this.atoms.push(atom);
       }
     }
-  }  
+  }
 
   //TODO: implement the rest of the terms
   readObject(tag: number, buffer: Buffer, offset: number): any {
 
     switch (tag) {
       case 70: {
-        return { data: "float8bytes", offset: offset + 8};
+        return { data: "float8bytes", offset: offset + 8 };
       }
       case 97:
         return { data: buffer.readUInt8(offset), offset: offset + 1 };
@@ -584,7 +580,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
     return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
   }
 
-  readonly hex: (d:number) => string = (d: number) => ("0" + d.toString(16)).slice(-2).toUpperCase();
+  readonly hex: (d: number) => string = (d: number) => ("0" + d.toString(16)).slice(-2).toUpperCase();
 
   readSmallBigNum(buffer: Buffer, offset: number): any {
     let length = buffer.readUInt8(offset++);
@@ -609,7 +605,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
     }
 
     if (index > 11) {
-      index = tags.TAG_UNKNOWN;
+      index = Tags.TAG_UNKNOWN;
     }
 
     return index;
@@ -619,7 +615,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
     let firstByte = buffer.readUInt8(offset++);
     let tag = this.readTag(firstByte);
 
-    if (tag === tags.TAG_EXT_LITERAL) {
+    if (tag === Tags.TAG_EXT_LITERAL) {
       //Read index in literals table
       let val = this.readTerm(buffer, offset);
       offset = val.offset;
@@ -630,10 +626,10 @@ export default class BeamFile implements beamdasm.IBeamFile {
       };
     }
 
-    if (tag === tags.TAG_EXT_LIST) {
+    if (tag === Tags.TAG_EXT_LIST) {
       let size = this.readTerm(buffer, offset);
       offset = size.offset;
-      let list:any[] = [];
+      let list: any[] = [];
       for (let i = 0; i < size.data; i++) {
         let obj = this.readTerm(buffer, offset);
         offset = obj.offset;
@@ -646,7 +642,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
       };
     }
 
-    if (tag === tags.TAG_EXT_FLOAT_REGISTER) {
+    if (tag === Tags.TAG_EXT_FLOAT_REGISTER) {
       //Read register number
       let val = this.readTerm(buffer, offset);
       //Would not hurt to assert the bellow assumption
@@ -657,11 +653,11 @@ export default class BeamFile implements beamdasm.IBeamFile {
         //Float registers contain TAG_LITERAL for the register number
         //safe to pass it directly instead of nesting, but keep the tag
         //for reporting purposes
-        data: val.data, 
+        data: val.data,
         offset: offset
       };
     }
-    if (tag === tags.TAG_EXT_ALLOC_LIST) {
+    if (tag === Tags.TAG_EXT_ALLOC_LIST) {
       let size = this.readTerm(buffer, offset);
       offset = size.offset;
       let list = [];
@@ -681,7 +677,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
       };
     }
 
-    if (tag > tags.TAG_CHARACTER) {
+    if (tag > Tags.TAG_CHARACTER) {
       console.log(`READING TAG: ${tag} is not implemented`);
     }
 
@@ -713,10 +709,10 @@ export default class BeamFile implements beamdasm.IBeamFile {
           offset: offset + 2
         };
       }
-      if( size === 3 ) {
+      if (size === 3) {
         return {
           tag: tag,
-          data: (buffer.readUInt8(offset) << 16) + (buffer.readUInt8(offset+1) << 8) + buffer.readUInt8(offset+2),
+          data: (buffer.readUInt8(offset) << 16) + (buffer.readUInt8(offset + 1) << 8) + buffer.readUInt8(offset + 2),
           offset: offset + 3
         };
       }
@@ -756,7 +752,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
       if (byteCode > 163) {
         console.log(`Illegal opcode ${byteCode}`);
       }
-      
+
 
       // if( byteCode === 125 ){
       //   console.log('fdiv');
@@ -769,16 +765,16 @@ export default class BeamFile implements beamdasm.IBeamFile {
         list.push(obj);
       }
 
-      if( byteCode === 1){
+      if (byteCode === 1) {
         label = list;
         continue;
       }
 
-      if( byteCode === 153 ){
+      if (byteCode === 153) {
         line = list;
         continue;
       }
-      
+
       this.code.push({ op: byteCode, params: list, label: label, line: line });
       line = null;
       label = null;

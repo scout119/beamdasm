@@ -1,11 +1,11 @@
 // Copyright 2018 Valentin Ivanov (valen.ivanov@gmail.com)
-
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,60 +15,60 @@
 'use strict';
 
 import { opcodes } from './beam/opcodes';
-import * as tags from './beam/tags';
 
 /// <reference path="interface.ts"/>
+import * as Tags from './beam/tags';
 
 let lbl: (val: number) => string;
 
-function instructionToString(bm: beamdasm.IBeamFile, obj: any, func: number): string {
+function instructionToString(beamFile: beamdasm.IBeamFile, obj: any, func: number): string {
   let name = opcodes[obj.op].nm;
   let str = `  ${name}` + ' '.repeat(20 - name.length);
 
   for (let i = 0; i < opcodes[obj.op].ar; i++) {
     if (i === func) {
-      let func_info = bm.imports[obj.params[i].data];
-      str += ` ${bm.atoms[func_info.module]}:${bm.atoms[func_info.function]}/${func_info.arity}`;
+      let func_info = beamFile.imports[obj.params[i].data];
+      str += ` ${beamFile.atoms[func_info.module]}:${beamFile.atoms[func_info.function]}/${func_info.arity}`;
     }
     else {
-      str += ` ${termToString(bm, obj.params[i])}`;
+      str += ` ${termToString(beamFile, obj.params[i])}`;
     }
   }
   return str;
 }
 
-function termToString(bm: beamdasm.IBeamFile, obj: any): string {
-  if (obj.tag === tags.TAG_LABEL) {
+function termToString(beamFile: beamdasm.IBeamFile, obj: any): string {
+  if (obj.tag === Tags.TAG_LABEL) {
     return lbl(obj.data);
   }
-  if (obj.tag === tags.TAG_X_REGISTER) {
+  if (obj.tag === Tags.TAG_X_REGISTER) {
     return `X[${obj.data}]`;
   }
-  if (obj.tag === tags.TAG_Y_REGISTER) {
+  if (obj.tag === Tags.TAG_Y_REGISTER) {
     return `Y[${obj.data}]`;
   }
-  if (obj.tag === tags.TAG_ATOM) {
-    let value = bm.atoms[obj.data];
+  if (obj.tag === Tags.TAG_ATOM) {
+    let value = beamFile.atoms[obj.data];
     return value === undefined ? `.` : `${value}`;
   }
-  if (obj.tag === tags.TAG_EXT_FLOAT_REGISTER) {
+  if (obj.tag === Tags.TAG_EXT_FLOAT_REGISTER) {
     return `FR[${obj.data}]`;
   }
-  if (obj.tag === tags.TAG_EXT_LITERAL) {
-    return `${bm.literals[obj.data]}`;
+  if (obj.tag === Tags.TAG_EXT_LITERAL) {
+    return `${beamFile.literals[obj.data]}`;
   }
-  if (obj.tag === tags.TAG_EXT_LIST) {
+  if (obj.tag === Tags.TAG_EXT_LIST) {
     let str = '[';
     for (let i = 0; i < obj.data.length; i++) {
       str += (i !== 0) ? ', ' : '';
-      str += `${termToString(bm, obj.data[i])}`;
+      str += `${termToString(beamFile, obj.data[i])}`;
     }
     str += ']';
 
     return str;
   }
 
-  if (obj.tag === tags.TAG_LITERAL || obj.tag === tags.TAG_INTEGER) {
+  if (obj.tag === Tags.TAG_LITERAL || obj.tag === Tags.TAG_INTEGER) {
     return `${obj.data}`;
   }
 
@@ -77,33 +77,33 @@ function termToString(bm: beamdasm.IBeamFile, obj: any): string {
 
 export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
 
-  formatModuleInfo(bm: beamdasm.IBeamFile): string {
-    let str = `Module:  ${bm.atoms[1]}\n`;
+  formatModuleInfo(beamFile: beamdasm.IBeamFile): string {
+    let str = `Module:  ${beamFile.atoms[1]}\n`;
     str += '\n';
-    str += `Attributes: ${bm.attributes}\n`;
+    str += `Attributes: ${beamFile.attributes}\n`;
     str += '\n';
-    str += `Compilation Info: ${bm.compilationInfo}\n`;
+    str += `Compilation Info: ${beamFile.compilationInfo}\n`;
     str += '\n';
     return str;
   }
-  
-  formatcode(bm: beamdasm.IBeamFile): string {
+
+  formatcode(beamFile: beamdasm.IBeamFile): string {
 
     let str = '';
 
-    let lblLength = bm.codeNumberOfLabels.toString().length;
+    let lblLength = beamFile.codeNumberOfLabels.toString().length;
     lblLength = lblLength < 2 ? 2 : lblLength;
     if (!lbl) {
       lbl = (val: number) => `label${("0".repeat(lblLength) + val.toString()).slice(-lblLength)}`;
     }
 
-    str += this.formatModuleInfo(bm);
+    str += this.formatModuleInfo(beamFile);
 
-    for (let i = 0; i < bm.code.length; i++) {
-      let obj = bm.code[i];
+    for (let i = 0; i < beamFile.code.length; i++) {
+      let obj = beamFile.code[i];
 
       if (obj.op === 2) {
-        str += `\n//Function  ${bm.atoms[obj.params[0].data]}:${bm.atoms[obj.params[1].data]}/${obj.params[2].data}\n`;
+        str += `\n//Function  ${beamFile.atoms[obj.params[0].data]}:${beamFile.atoms[obj.params[1].data]}/${obj.params[2].data}\n`;
       }
 
       if (obj.label) {
@@ -114,26 +114,26 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
       }
 
       if (obj.op === 7 || obj.op === 8) {
-        str += instructionToString(bm, obj, 1);
+        str += instructionToString(beamFile, obj, 1);
       }
       else if (obj.op === 9) {
-        str += instructionToString(bm, obj, 0);
+        str += instructionToString(beamFile, obj, 0);
       }
       else if (obj.op === 78) {
-        str += instructionToString(bm, obj, 1);
+        str += instructionToString(beamFile, obj, 1);
       }
       else if (obj.op === 124 || obj.op === 125) {
-        str += instructionToString(bm, obj, 2);
+        str += instructionToString(beamFile, obj, 2);
       }
       else {
-        str += instructionToString(bm, obj, -1);
+        str += instructionToString(beamFile, obj, -1);
       }
 
       if (obj.line) {
         //skip zero lines
         if (obj.line[0].data !== 0) {
-          let line_ref = bm.lineRefs[obj.line[0].data];
-          str += ` //line ${bm.lineFNames[line_ref[0]]}, ${line_ref[1]}`;
+          let line_ref = beamFile.lineRefs[obj.line[0].data];
+          str += ` //line ${beamFile.lineFNames[line_ref[0]]}, ${line_ref[1]}`;
         }
       }
 
@@ -142,35 +142,35 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  formatlitt(bm: beamdasm.IBeamFile): string {
+  formatlitt(beamFile: beamdasm.IBeamFile): string {
     let str = 'Literals: ';
-    str += `${bm.literals}\n`;
+    str += `${beamFile.literals}\n`;
 
     str += '\n';
     return str;
   }
 
-  formatatu8(bm: beamdasm.IBeamFile): string {
+  formatatu8(beamFile: beamdasm.IBeamFile): string {
     let str = 'Atoms:   ';
     let offset = str.length;
 
-    for (let i = 0; i < bm.atoms.length; i++) {
+    for (let i = 0; i < beamFile.atoms.length; i++) {
       str += (i !== 0) ? ' '.repeat(offset) : '';
-      str += `${i}\t${bm.atoms[i]}\n`;
+      str += `${i}\t${beamFile.atoms[i]}\n`;
     }
     str += '\n';
 
     return str;
   }
 
-  formatimpt(bm: beamdasm.IBeamFile): string {
+  formatimpt(beamFile: beamdasm.IBeamFile): string {
     let str = 'Imports: ';
     let offset = str.length;
 
-    for (let i = 0; i < bm.imports.length; i++) {
-      let func_info = bm.imports[i];
+    for (let i = 0; i < beamFile.imports.length; i++) {
+      let func_info = beamFile.imports[i];
       str += (i !== 0) ? ' '.repeat(offset) : '';
-      str += `${func_info.module}/${func_info.function}/${func_info.arity} ${bm.atoms[func_info.module]}:${bm.atoms[func_info.function]}/${func_info.arity}\n`;
+      str += `${func_info.module}/${func_info.function}/${func_info.arity} ${beamFile.atoms[func_info.module]}:${beamFile.atoms[func_info.function]}/${func_info.arity}\n`;
     }
 
     str += '\n';
@@ -178,10 +178,10 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  formatexpt(bm: beamdasm.IBeamFile): string {
+  formatexpt(beamFile: beamdasm.IBeamFile): string {
 
     if (!lbl) {
-      let lblLength = bm.codeNumberOfLabels.toString().length;
+      let lblLength = beamFile.codeNumberOfLabels.toString().length;
       lblLength = lblLength < 2 ? 2 : lblLength;
 
       lbl = (val: number) => `label${("0".repeat(lblLength) + val.toString()).slice(-lblLength)}`;
@@ -189,19 +189,19 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
 
     let str = 'Exports: ';
     let offset = str.length;
-    for (let i = 0; i < bm.exports.length; i++) {
-      let func_info = bm.exports[i];
+    for (let i = 0; i < beamFile.exports.length; i++) {
+      let func_info = beamFile.exports[i];
       str += (i !== 0) ? ' '.repeat(offset) : '';
-      str += `${func_info.function}/${func_info.arity}/${func_info.label} ${bm.atoms[func_info.function]}/${func_info.arity} ${lbl(func_info.label)}\n`;
+      str += `${func_info.function}/${func_info.arity}/${func_info.label} ${beamFile.atoms[func_info.function]}/${func_info.arity} ${lbl(func_info.label)}\n`;
     }
     str += '\n';
     return str;
   }
 
-  formatloct(bm: beamdasm.IBeamFile): string {
+  formatloct(beamFile: beamdasm.IBeamFile): string {
 
     if (!lbl) {
-      let lblLength = bm.codeNumberOfLabels.toString().length;
+      let lblLength = beamFile.codeNumberOfLabels.toString().length;
       lblLength = lblLength < 2 ? 2 : lblLength;
 
       lbl = (val: number) => `label${("0".repeat(lblLength) + val.toString()).slice(-lblLength)}`;
@@ -210,19 +210,19 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     let str = 'Private: ';
     let offset = str.length;
 
-    for (let i = 0; i < bm.LocT.length; i++) {
-      let func_info = bm.LocT[i];
+    for (let i = 0; i < beamFile.LocT.length; i++) {
+      let func_info = beamFile.LocT[i];
       str += (i !== 0) ? ' '.repeat(offset) : '';
-      str += `${func_info.function}/${func_info.arity}/${func_info.label} ${bm.atoms[func_info.function]}/${func_info.arity} ${lbl(func_info.label)}\n`;
+      str += `${func_info.function}/${func_info.arity}/${func_info.label} ${beamFile.atoms[func_info.function]}/${func_info.arity} ${lbl(func_info.label)}\n`;
     }
     str += '\n';
     return str;
   }
 
-  formatstrt(bm: beamdasm.IBeamFile): string {
+  formatstrt(beamFile: beamdasm.IBeamFile): string {
     let str = 'Strings: ';
 
-    str += `\"${bm.StrT}\"\n`;
+    str += `\"${beamFile.StrT}\"\n`;
 
     str += '\n';
     return str;
