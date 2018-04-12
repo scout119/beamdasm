@@ -17,7 +17,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import BeamFile from './beam/beamFile';
+import { BeamCache } from './beam/beamFileCache';
 
 export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 
@@ -140,12 +140,12 @@ export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vsc
       } else if (element instanceof BeamFileItem) {
 
         if (fs.existsSync(element.filePath)) {
-          let bm = BeamFile.fromFile(element.filePath);
+          let beamFile = BeamCache.getBeamFile(element.filePath);
 
-          for (const key in bm.sections) {
-            if (bm.sections.hasOwnProperty(key)) {
-              if (this.supportedSections.indexOf(key) !== -1 && !bm.sections[key].empty) {
-                toBeResolved.push(new BeamChunkItem(bm.sections[key].name, key, element.filePath, `${key}.svg`));
+          for (const key in beamFile.sections) {
+            if (beamFile.sections.hasOwnProperty(key)) {
+              if (this.supportedSections.indexOf(key) !== -1 && !beamFile.sections[key].empty) {
+                toBeResolved.push(new BeamChunkItem(beamFile.sections[key].name, key, element.filePath, `${key}.svg`));
               }
             }
           }

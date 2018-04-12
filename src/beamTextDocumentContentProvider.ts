@@ -16,9 +16,10 @@
 
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import BeamFile from './beam/beamFile';
-import { BeamdasmFormatter } from './beamdasmFormatter';
-import { ErlangFormatter } from './erlangFormatter';
+
+import { BeamdasmFormatter } from './beam/beamdasmFormatter';
+import { ErlangFormatter } from './beam/erlangFormatter';
+import { BeamCache } from './beam/beamFileCache';
 
 /// <reference path="interface.ts"/>
 /// <reference path="beamdasmFormatter.ts"/>
@@ -51,7 +52,7 @@ export default class BeamTextDocumentContentProvider implements vscode.TextDocum
       return;
     }
 
-    let beamFile = BeamFile.fromFile(beamFilePath);
+    let beamFile = BeamCache.getBeamFile(beamFilePath);
 
     let str = '';
 

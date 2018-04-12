@@ -14,10 +14,10 @@
 
 'use strict';
 
-import { opcodes } from './beam/opcodes';
-
 /// <reference path="interface.ts"/>
-import * as Tags from './beam/tags';
+
+import { opcodes } from './opcodes';
+import * as Tags from './tags';
 
 let lbl: (val: number) => string;
 
