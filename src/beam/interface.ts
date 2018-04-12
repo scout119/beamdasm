@@ -20,6 +20,9 @@ namespace beamdasm {
     sections: any;
 
     atoms: string[];
+    numberOfAtoms: number;
+    maxAtomNameLength: number;
+
     code: any[];
     lineRefs: any[];
     lineFNames: any[];

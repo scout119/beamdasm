@@ -206,7 +206,7 @@ class BeamChunkItem extends vscode.TreeItem {
 
     let sectionDocument = vscode.Uri.file(filePath.replace(".beam", `.beam_${chunk}`));
     this.command = {
-      command: 'vscode.open',
+      command: chunk === 'code' ? 'vscode.open' : 'vscode.previewHtml',
       arguments: [sectionDocument.with({ scheme: `beam${chunk.toLowerCase()}` })],
       title: `View ${chunk}`
     };

@@ -27,7 +27,12 @@ import { BeamCache } from './beam/beamFileCache';
 
 
 
-export default class BeamTextDocumentContentProvider implements vscode.TextDocumentContentProvider {
+export default class BeamTextDocumentContentProvider implements vscode.TextDocumentContentProvider { //, vscode.DocumentLinkProvider {
+
+  provideDocumentLinks(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.DocumentLink[]> {
+    throw new Error("Method not implemented.");
+  }
+
 
   formatters: { [s: string]: beamdasm.BeamBytecodeFormatter; } = {};
 

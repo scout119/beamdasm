@@ -36,6 +36,9 @@ export default class BeamFile implements beamdasm.IBeamFile {
   sections: any = {};
 
   atoms: string[] = ["nil"];
+  numberOfAtoms: number = 0;
+  maxAtomNameLength: number = 0;
+
   imports: any[] = [];
   exports: any[] = [];
   LocT: any[] = [];
@@ -433,6 +436,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
       let offset = section.start;
 
       let nAtoms = buffer.readUInt32BE(offset);
+      this.numberOfAtoms = nAtoms;
       if (nAtoms === 0) {
         section.empty = 0;
         return;
@@ -440,12 +444,17 @@ export default class BeamFile implements beamdasm.IBeamFile {
 
       offset += 4;
 
+      let maxLength = 0;
+
       while (nAtoms-- > 0) {
         let atomLength = buffer.readUInt8(offset);
         let atom = buffer.toString('utf8', offset + 1, offset + 1 + atomLength);
+        maxLength = ( atom.length > maxLength) ? atom.length : maxLength;
         offset = offset + 1 + atomLength;
         this.atoms.push(atom);
       }
+
+      this.maxAtomNameLength = maxLength;
     }
   }
 
