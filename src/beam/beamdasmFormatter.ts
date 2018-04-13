@@ -150,16 +150,53 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  formatatu8(beamFile: beamdasm.IBeamFile): string {
-    let str = 'Atoms:   ';
-    let offset = str.length;
+  // formatatu8(beamFile: beamdasm.IBeamFile): string {
+  //   let str = 'Atoms:   ';
+  //   let offset = str.length;
 
-    for (let i = 0; i < beamFile.atoms.length; i++) {
-      str += (i !== 0) ? ' '.repeat(offset) : '';
-      str += `${i}\t${beamFile.atoms[i]}\n`;
+  //   for (let i = 0; i < beamFile.atoms.length; i++) {
+  //     str += (i !== 0) ? ' '.repeat(offset) : '';
+  //     str += `${i}\t${beamFile.atoms[i]}\n`;
+  //   }
+  //   str += '\n';
+
+  //   return str;
+  // }
+
+  formatatu8(beamFile: beamdasm.IBeamFile):string {
+    let str = `
+    <head>
+    <style>
+      table, td, th {
+          border: 1px solid white;
+      }
+      table {
+        margin-left: auto;
+        margin-right: auto;
+        border-collapse: collapse;
+        width: 50%;
+      }    
+      th {
+          height: 50px;
+      }      
+      td {
+        text-align: center;
+      }
+    </style>
+    </head>
+    <table style="margin-left:auto;margin-right:auto;width=50%">
+    <tr><th>Index</th><th>Atom</th></tr>
+    ${this.insertAtoms(beamFile)}
+    </table>`;
+
+    return str;
+  }
+
+  insertAtoms(beamFile: beamdasm.IBeamFile):string {
+    let str = '';
+    for(let i = 0; i< beamFile.atoms.length; i++){
+      str+=`<tr><td>${i}</td><td>${beamFile.atoms[i]}</td></tr>`;
     }
-    str += '\n';
-
     return str;
   }
 

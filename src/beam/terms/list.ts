@@ -16,25 +16,25 @@
 
 export default class List {
 
-  _elements: any[] = [];
+  items: any[] = [];
 
   add(obj: any) {
-    this._elements.push(obj);
+    this.items.push(obj);
   }
 
   toString(): string {
     let str = '[';
-    for (let i = 0; i < this._elements.length; i++) {
+    for (let i = 0; i < this.items.length; i++) {
       str += i !== 0 ? ', ' : '';
-      str += `${this._elements[i]}`;
+      str += `${this.items[i]}`;
     }
     str += ']';
     return str;
   }
 
   get(index: number): any | undefined {
-    if (index >= 0 && index < this._elements.length) {
-      return this._elements[index];
+    if (index >= 0 && index < this.items.length) {
+      return this.items[index];
     }
     return;
   }

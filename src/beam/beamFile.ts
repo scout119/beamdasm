@@ -64,6 +64,7 @@ export default class BeamFile implements beamdasm.IBeamFile {
   }
 
   readBeamFile(filePath: string) {
+    
     let buffer: Buffer = fs.readFileSync(filePath);
 
     let for1 = buffer.toString('utf8', 0, 4).toLowerCase();

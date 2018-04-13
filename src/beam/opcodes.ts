@@ -23,7 +23,7 @@ export const opcodes: any = {
   2: {
     ar: 3,
     nm: 'func_info',
-    doc: '**func_info** *M* *F* *A*\nDefine a function M:F/A'
+    doc: '**func_info** *Module* *Function* *Arity*\nDefine a function *Module*:*Function*/*Arity*'
   },
   3: {
     ar: 0,

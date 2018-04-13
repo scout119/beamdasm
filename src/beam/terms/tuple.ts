@@ -15,18 +15,18 @@
 'use strict';
 
 export default class Tuple {
-  _elements: any[] = [];
+  items: any[] = [];
 
   add(obj: any) {
-    this._elements.push(obj);
+    this.items.push(obj);
   }
 
   toString(): string {
     let str = '{';
-    for (let i = 0; i < this._elements.length; i++) {
+    for (let i = 0; i < this.items.length; i++) {
 
       str += i !== 0 ? ', ' : '';
-      str += `${this._elements[i]}`;
+      str += `${this.items[i]}`;
     }
 
     str += '}';
