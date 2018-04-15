@@ -14,22 +14,29 @@
 
 'use strict';
 
-export default class Tuple {
-  items: any[] = [];
+import Tuple from './tuple';
 
-  add(obj: any) {
-    this.items.push(obj);
+export default class Map {
+  items: Tuple[] =[];
+
+  add( key: any, value: any) {
+    let item = new Tuple();
+    item.add(key);
+    item.add(value);
+    this.items.push(item);
   }
 
-  toString(): string {
-    let str = '{';
-    for (let i = 0; i < this.items.length; i++) {
+  toString():string {
+    let str = '%{';
 
-      str += i !== 0 ? ', ' : '';
-      str += `${this.items[i]}`;
+    for( let i = 0; i< this.items.length; i++)
+    {
+      str += i!==0 ? ', ' : '';
+      str += `${this.items[i].items[0]} => ${this.items[0].items[1]}`;
     }
 
     str += '}';
+
     return str;
   }
 }

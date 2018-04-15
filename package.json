@@ -3,7 +3,7 @@
     "displayName": "BEAMdasm",
     "description": "BEAM file disassembler",
     "license": "SEE LICENSE IN LICENSE.md",
-    "version": "0.0.2",
+    "version": "1.0.0",
     "publisher": "Valentin",
     "engines": {
         "vscode": "^1.21.0"
@@ -26,7 +26,6 @@
         "color": "#1E1E1E",
         "theme": "dark"
     },
-    "preview": true,
     "activationEvents": [
         "onView:beamdasm.beamFilesTree",
         "onCommand:beamdasm.disassemble"

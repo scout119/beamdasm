@@ -1,5 +1,6 @@
 .vscode/**
 .vscode-test/**
+releases/**
 out/test/**
 out/**/*.map
 src/**

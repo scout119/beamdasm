@@ -1,11 +1,11 @@
 // Copyright 2018 Valentin Ivanov (valen.ivanov@gmail.com)
-
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,11 +15,14 @@
 'use strict';
 
 namespace beamdasm {
-  export interface IBeamFile{
+  export interface Beam {
 
-    sections:any;
+    sections: any;
 
     atoms: string[];
+    numberOfAtoms: number;
+    maxAtomNameLength: number;
+
     code: any[];
     lineRefs: any[];
     lineFNames: any[];
@@ -29,25 +32,25 @@ namespace beamdasm {
 
     imports: any[];
     exports: any[];
-    literals: any[];    
-      
+    literals: any[];
+
     attributes: any;
     compilationInfo: any;
-  
+
 
     codeNumberOfLabels: number;
   }
-  export interface BeamBytecodeFormatter {
-    
-    formatModuleInfo(beamFile: IBeamFile): string;
-    formatcode(beamFile: IBeamFile): string;    
-    formatlitt(beamFile: IBeamFile): string;
-    formatatu8(beamFile: IBeamFile) :string;
-    formatimpt(beamFile: IBeamFile): string;
-    formatexpt(beamFile: IBeamFile): string;
-    formatloct(beamFile: IBeamFile): string;
-    formatstrt(beamFile: IBeamFile): string;
+  export interface BeamFormatter {
 
-    [func: string]: (beamFile: IBeamFile) => string;
+    formatcode(beamFile: Beam): string;
+    formatlitt(beamFile: Beam): string;
+    formatatu8(beamFile: Beam): string;
+    formatimpt(beamFile: Beam): string;
+    formatexpt(beamFile: Beam): string;
+    formatloct(beamFile: Beam): string;
+    formatstrt(beamFile: Beam): string;
+    formatattr(beamFile: Beam): string;
+
+    [func: string]: (beamFile: Beam) => string;
   }
 }
