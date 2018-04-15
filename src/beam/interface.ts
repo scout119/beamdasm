@@ -15,7 +15,7 @@
 'use strict';
 
 namespace beamdasm {
-  export interface IBeamFile {
+  export interface Beam {
 
     sections: any;
 
@@ -40,16 +40,17 @@ namespace beamdasm {
 
     codeNumberOfLabels: number;
   }
-  export interface BeamBytecodeFormatter {
+  export interface BeamFormatter {
 
-    formatcode(beamFile: IBeamFile): string;
-    formatlitt(beamFile: IBeamFile): string;
-    formatatu8(beamFile: IBeamFile): string;
-    formatimpt(beamFile: IBeamFile): string;
-    formatexpt(beamFile: IBeamFile): string;
-    formatloct(beamFile: IBeamFile): string;
-    formatstrt(beamFile: IBeamFile): string;
+    formatcode(beamFile: Beam): string;
+    formatlitt(beamFile: Beam): string;
+    formatatu8(beamFile: Beam): string;
+    formatimpt(beamFile: Beam): string;
+    formatexpt(beamFile: Beam): string;
+    formatloct(beamFile: Beam): string;
+    formatstrt(beamFile: Beam): string;
+    formatattr(beamFile: Beam): string;
 
-    [func: string]: (beamFile: IBeamFile) => string;
+    [func: string]: (beamFile: Beam) => string;
   }
 }

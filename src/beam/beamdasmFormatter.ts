@@ -21,7 +21,7 @@ import * as Tags from './tags';
 
 let lbl: (val: number) => string;
 
-function instructionToString(beamFile: beamdasm.IBeamFile, obj: any, func: number): string {
+function instructionToString(beamFile: beamdasm.Beam, obj: any, func: number): string {
   let name = opcodes[obj.op].nm;
   let str = `  ${name}` + ' '.repeat(20 - name.length);
 
@@ -37,7 +37,7 @@ function instructionToString(beamFile: beamdasm.IBeamFile, obj: any, func: numbe
   return str;
 }
 
-function termToString(beamFile: beamdasm.IBeamFile, obj: any): string {
+function termToString(beamFile: beamdasm.Beam, obj: any): string {
   if (obj.tag === Tags.TAG_LABEL) {
     return lbl(obj.data);
   }
@@ -75,9 +75,9 @@ function termToString(beamFile: beamdasm.IBeamFile, obj: any): string {
   return `.`;
 }
 
-export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
+export class BeamdasmFormatter implements beamdasm.BeamFormatter {
 
-  formatModuleInfo(beamFile: beamdasm.IBeamFile): string {
+  formatModuleInfo(beamFile: beamdasm.Beam): string {
     let str = `Module:  ${beamFile.atoms[1]}\n`;
     str += '\n';
     str += `Attributes: ${beamFile.attributes}\n`;
@@ -87,7 +87,7 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  formatcode(beamFile: beamdasm.IBeamFile): string {
+  formatcode(beamFile: beamdasm.Beam): string {
 
     let str = '';
 
@@ -142,65 +142,31 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  formatlitt(beamFile: beamdasm.IBeamFile): string {
-    let str = 'Literals: ';
-    str += `${beamFile.literals}\n`;
+  formatlitt(beamFile: beamdasm.Beam): string {
+    let str = 'Literals: \n';
+
+    for( let i = 0; i < beamFile.literals.length; i++ ){
+      str += `\t${beamFile.literals[i]}\n`;
+    }
 
     str += '\n';
     return str;
   }
 
-  // formatatu8(beamFile: beamdasm.IBeamFile): string {
-  //   let str = 'Atoms:   ';
-  //   let offset = str.length;
+  formatatu8(beamFile: beamdasm.Beam): string {
+    let str = 'Atoms:   ';
+    let offset = str.length;
 
-  //   for (let i = 0; i < beamFile.atoms.length; i++) {
-  //     str += (i !== 0) ? ' '.repeat(offset) : '';
-  //     str += `${i}\t${beamFile.atoms[i]}\n`;
-  //   }
-  //   str += '\n';
-
-  //   return str;
-  // }
-
-  formatatu8(beamFile: beamdasm.IBeamFile):string {
-    let str = `
-    <head>
-    <style>
-      table, td, th {
-          border: 1px solid white;
-      }
-      table {
-        margin-left: auto;
-        margin-right: auto;
-        border-collapse: collapse;
-        width: 50%;
-      }    
-      th {
-          height: 50px;
-      }      
-      td {
-        text-align: center;
-      }
-    </style>
-    </head>
-    <table style="margin-left:auto;margin-right:auto;width=50%">
-    <tr><th>Index</th><th>Atom</th></tr>
-    ${this.insertAtoms(beamFile)}
-    </table>`;
-
-    return str;
-  }
-
-  insertAtoms(beamFile: beamdasm.IBeamFile):string {
-    let str = '';
-    for(let i = 0; i< beamFile.atoms.length; i++){
-      str+=`<tr><td>${i}</td><td>${beamFile.atoms[i]}</td></tr>`;
+    for (let i = 0; i < beamFile.atoms.length; i++) {
+      str += (i !== 0) ? ' '.repeat(offset) : '';
+      str += `${i}\t${beamFile.atoms[i]}\n`;
     }
+    str += '\n';
+
     return str;
   }
 
-  formatimpt(beamFile: beamdasm.IBeamFile): string {
+  formatimpt(beamFile: beamdasm.Beam): string {
     let str = 'Imports: ';
     let offset = str.length;
 
@@ -215,7 +181,7 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  formatexpt(beamFile: beamdasm.IBeamFile): string {
+  formatexpt(beamFile: beamdasm.Beam): string {
 
     if (!lbl) {
       let lblLength = beamFile.codeNumberOfLabels.toString().length;
@@ -235,7 +201,7 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  formatloct(beamFile: beamdasm.IBeamFile): string {
+  formatloct(beamFile: beamdasm.Beam): string {
 
     if (!lbl) {
       let lblLength = beamFile.codeNumberOfLabels.toString().length;
@@ -256,7 +222,7 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  formatstrt(beamFile: beamdasm.IBeamFile): string {
+  formatstrt(beamFile: beamdasm.Beam): string {
     let str = 'Strings: ';
 
     str += `\"${beamFile.StrT}\"\n`;
@@ -265,5 +231,12 @@ export class BeamdasmFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  [func: string]: (beamFile: beamdasm.IBeamFile) => string;
+  formatattr(beamFile: beamdasm.Beam): string {
+    let str = 'Attributes:\n';
+
+    str += `${beamFile.attributes}`;
+    return str;
+  }
+
+  [func: string]: (beamFile: beamdasm.Beam) => string;
 }

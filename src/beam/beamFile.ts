@@ -18,13 +18,14 @@ import * as fs from 'fs';
 import * as zlib from 'zlib';
 import List from './terms/list';
 import Tuple from './terms/tuple';
+import Map from './terms/map';
 
 import { opcodes } from './opcodes';
 
 import * as Tags from './tags';
 /// <reference path="interface.ts"/>
 
-export default class BeamFile implements beamdasm.IBeamFile {
+export default class BeamFile implements beamdasm.Beam {
 
   readonly code: any[] = [];
   _codeNumberOfFunctions: number = 0;
@@ -550,23 +551,23 @@ export default class BeamFile implements beamdasm.IBeamFile {
 
   readMap(buffer: Buffer, offset: number): any {
     let arity = buffer.readUInt32BE(offset); offset += 4;
+
+    let map = new Map();
+
     while (arity-- > 0) {
       let keyTag = buffer.readUInt8(offset++);
       let keyObj = this.readObject(keyTag, buffer, offset);
       offset = keyObj.offset;
 
-      //console.log(`${keyObj.data}`);
-
       let valTag = buffer.readUInt8(offset++);
       let valObj = this.readObject(valTag, buffer, offset);
       offset = valObj.offset;
 
-      //console.log(`${valObj.data}`);
 
-      //Add object to the map
+      map.add(keyObj.data, valObj.data);
     }
 
-    return { data: "Map", offset: offset };
+    return { data: map, offset: offset };
   }
 
   readAtom(buffer: Buffer, offset: number): any {

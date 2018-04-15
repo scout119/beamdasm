@@ -34,7 +34,7 @@ export default class BeamTextDocumentContentProvider implements vscode.TextDocum
   }
 
 
-  formatters: { [s: string]: beamdasm.BeamBytecodeFormatter; } = {};
+  formatters: { [s: string]: beamdasm.BeamFormatter; } = {};
 
   constructor() {
     this.formatters['erlang'] = new ErlangFormatter();
@@ -61,7 +61,7 @@ export default class BeamTextDocumentContentProvider implements vscode.TextDocum
 
     let str = '';
 
-    function formatSection(formatter: beamdasm.BeamBytecodeFormatter, section: string): string {
+    function formatSection(formatter: beamdasm.BeamFormatter, section: string): string {
       let str = '';
 
       if (section in beamFile.sections) {
@@ -74,8 +74,8 @@ export default class BeamTextDocumentContentProvider implements vscode.TextDocum
       return str;
     }
 
-    let configuration = vscode.workspace.getConfiguration('beamdasm');
-    let formatterToUse = configuration['formatter'];
+    //let configuration = vscode.workspace.getConfiguration('beamdasm');
+    let formatterToUse = 'beamdasm'; //configuration['formatter'];
 
     let section = uri.scheme.substr(4, 4);
     str = formatSection(this.formatters[formatterToUse], section);

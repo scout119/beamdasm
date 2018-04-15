@@ -31,11 +31,11 @@ class BeamCacheSingleton
   }
   
   beamFilePath: string = '';
-  beamFile: beamdasm.IBeamFile | undefined = undefined;
+  beamFile: beamdasm.Beam | undefined = undefined;
 
-  public getBeamFile(path: string): beamdasm.IBeamFile {
+  public getBeamFile(path: string): beamdasm.Beam {
     if( this.beamFilePath === path ){
-      return this.beamFile as beamdasm.IBeamFile;
+      return this.beamFile as beamdasm.Beam;
     }
 
     this.beamFilePath = path;

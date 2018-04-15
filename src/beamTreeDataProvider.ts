@@ -193,11 +193,11 @@ class BeamFileItem extends vscode.TreeItem {
 
   contextValue = 'beam';
 
-  command = {
-    command: "beamdasm.disassemble",
-    arguments: [vscode.Uri.file(this.filePath), this],
-    title: 'Open BEAM'
-  };
+  // command = {
+  //   command: "beamdasm.disassemble",
+  //   arguments: [vscode.Uri.file(this.filePath), this],
+  //   title: 'Open BEAM'
+  // };
 }
 
 class BeamChunkItem extends vscode.TreeItem {
@@ -206,8 +206,7 @@ class BeamChunkItem extends vscode.TreeItem {
 
     let sectionDocument = vscode.Uri.file(filePath.replace(".beam", `.beam_${chunk}`));
     this.command = {
-      command: chunk === 'code' ? 'vscode.open' : 'vscode.previewHtml',
-      //command: 'vscode.open',
+      command: 'vscode.open',
       arguments: [sectionDocument.with({ scheme: `beam${chunk.toLowerCase()}` })],
       title: `View ${chunk}`
     };

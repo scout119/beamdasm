@@ -16,9 +16,9 @@
 
 /// <reference path="interface.ts"/>
 
-export class ErlangFormatter implements beamdasm.BeamBytecodeFormatter {
+export class ErlangFormatter implements beamdasm.BeamFormatter {
 
-  formatModuleInfo(beamFile: beamdasm.IBeamFile): string {
+  formatModuleInfo(beamFile: beamdasm.Beam): string {
     let str = `Module:  ${beamFile.atoms[1]}\n`;
     str += '\n';
     str += `Attributes: ${beamFile.attributes}\n`;
@@ -28,33 +28,37 @@ export class ErlangFormatter implements beamdasm.BeamBytecodeFormatter {
     return str;
   }
 
-  formatcode(beamFile: beamdasm.IBeamFile): string {
+  formatcode(beamFile: beamdasm.Beam): string {
     return '';
   }
 
-  formatlitt(beamFile: beamdasm.IBeamFile): string {
+  formatlitt(beamFile: beamdasm.Beam): string {
     return '';
   }
 
-  formatatu8(beamFile: beamdasm.IBeamFile): string {
+  formatatu8(beamFile: beamdasm.Beam): string {
     return '';
   }
 
-  formatimpt(beamFile: beamdasm.IBeamFile): string {
+  formatimpt(beamFile: beamdasm.Beam): string {
     return '';
   }
 
-  formatexpt(beamFile: beamdasm.IBeamFile): string {
+  formatexpt(beamFile: beamdasm.Beam): string {
     return '';
   }
 
-  formatloct(beamFile: beamdasm.IBeamFile): string {
+  formatloct(beamFile: beamdasm.Beam): string {
     return '';
   }
 
-  formatstrt(beamFile: beamdasm.IBeamFile): string {
+  formatstrt(beamFile: beamdasm.Beam): string {
     return '';
   }
 
-  [func: string]: (beamFile: beamdasm.IBeamFile) => string;
+  formatattr(beamFile: beamdasm.Beam): string {
+    return '';
+  }
+
+  [func: string]: (beamFile: beamdasm.Beam) => string;
 }
