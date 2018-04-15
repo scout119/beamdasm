@@ -11,12 +11,13 @@ BEAM files disassembler extension for Visual Studio Code.
 ## Description
 
 Erlang\Elixir bytecode viewer.
-This extension allows to "peek" inside compiled bytecode for BEAM (Bogdan/Björn Erlang Abstract machine) binary files.
+This extension allows to "peek" inside compiled bytecode for BEAM (Bogdan/Björn Erlang Abstract machine).
 
 ## Features
 
 - Dedicated View in the Explorer for all .beam files in the workspace
   - Subitems for main sections:
+    - Bytecode instructions (**Code** section)
     - Atoms ('**Atom**' and '**AtU8**' sections)
     - Exported functions ('**ExpT**' section)
     - Imported functions ('**ImpT**' section)
@@ -24,9 +25,9 @@ This extension allows to "peek" inside compiled bytecode for BEAM (Bogdan/Björn
     - Strings '**StrT**' section)
     - Attributes ('**Attr**' section)
     - Literals ('**LitT**' section)
-- Opcodes, labels, registers highlighting
-- Hover description for opcodes taken from erlang source code  (when available)
-- Gutter images for start of the functions
+- Opcodes, labels and registers color highlighting
+- Hover description for opcodes taken from erlang source code (when available)
+- Gutter images to indicate start of each function
 
 To activate the extension select "Disassemble BEAM" from the context menu for a .beam file in the Explorer View:
 
@@ -48,7 +49,7 @@ None
 
 ## Release Notes
 
-Initial previe release
+First non-preview release
 
 ## Contributing
 
