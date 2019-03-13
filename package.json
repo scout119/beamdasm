@@ -3,7 +3,7 @@
     "displayName": "BEAMdasm",
     "description": "BEAM file disassembler",
     "license": "SEE LICENSE IN LICENSE.md",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "publisher": "Valentin",
     "engines": {
         "vscode": "^1.21.0"
@@ -12,7 +12,7 @@
         "name": "Valentin Ivanov"
     },
     "categories": [
-        "Languages",
+        "Programming Languages",
         "Other"
     ],
     "keywords": [
@@ -46,7 +46,7 @@
                 "language": "beam",
                 "scopeName": "source.beamdasm",
                 "path": "./syntaxes/beamdasm.tmLanguage.json"
-            }            
+            }
         ],
         "commands": [
             {
@@ -95,11 +95,11 @@
         "test": "npm run compile && node ./node_modules/vscode/bin/test"
     },
     "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "tslint": "^5.8.0",
+        "@types/mocha": "^2.2.42",
         "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
+        "tslint": "^5.8.0",
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.30"
     },
     "bugs": {
         "url": "https://github.com/scout119/beamdasm/issues"
