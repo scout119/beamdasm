@@ -603,7 +603,7 @@ export default class BeamFile implements beamdasm.Beam {
       result += this.hex(buffer.readUInt8(offset + i));
     }
 
-    return { data: result, offse: offset + length };
+    return { data: result, offset: offset + length };
   }
 
   readTag(value: number): number {
