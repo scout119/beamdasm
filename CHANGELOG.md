@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Erlang assembly formatter
 
+## 1.1.0
+
+- Added support for OTP 22, OTP 23 instruction codes
+- Fix for [Does not open with VSCode 1.31.1](https://github.com/scout119/beamdasm/issues/6)
+
 ## 1.0.1
 
 - Fix for [Does not open with VSCode 1.31.1](https://github.com/scout119/beamdasm/issues/4)

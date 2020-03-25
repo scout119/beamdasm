@@ -3,7 +3,7 @@
     "displayName": "BEAMdasm",
     "description": "BEAM file disassembler",
     "license": "SEE LICENSE IN LICENSE.md",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "publisher": "Valentin",
     "engines": {
         "vscode": "^1.21.0"
@@ -96,10 +96,10 @@
     },
     "devDependencies": {
         "@types/mocha": "^2.2.42",
-        "@types/node": "^7.0.43",
-        "tslint": "^5.8.0",
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.30"
+        "@types/node": "^7.10.9",
+        "tslint": "^5.20.1",
+        "typescript": "^2.9.2",
+        "vscode": "^1.1.36"
     },
     "bugs": {
         "url": "https://github.com/scout119/beamdasm/issues"

@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// https://github.com/erlang/otp/blob/master/lib/compiler/src/genop.tab
+
 'use strict';
 
 export const opcodes: any = {
@@ -457,11 +459,48 @@ export const opcodes: any = {
     ar: 2,
     nm: 'get_tl',
     doc: '**get_tl** *Source* *Tail*\nGet the tail (or cdr) part of a list (a cons cell) from *Source* and put it into the register *Tail*.'
-  }
+  },
+  // OTP 22
+  164: {
+    ar: 2,
+    nm: 'put_tuple2',
+    doc: '**put_tuple2** *Destination* *Elements*\nBuild a tuple with the elements in the list *Elements* and put it into register *Destination*.'
+  },
+  165: {
+    ar: 3,
+    nm: 'bs_get_tail',
+    doc: '**bs_get_tail** *Ctx* *Dst* *Live*\nSets *Dst* to the tail of *Ctx* at the current position.'
+  },
+  166: {
+    ar: 4,
+    nm: 'bs_start_match3',
+    doc: '**bs_start_match3** *Fail* *Bin *Live* *Dst*\nStarts a binary match sequence.'
+  },
+  167: {
+    ar: 3,
+    nm: 'bs_get_position',
+    doc: '**bs_get_position** *Ctx* *Dst* *Live*\nSets *Dst* to the current position of *Ctx*.'
+  },
+  168: {
+    ar: 2,
+    nm: 'bs_set_position',
+    doc: '**bs_set_position** *Ctx* *Pos*\nSets the current position of *Ctx* to *Pos*.'
+  },
+  //OTP 23
+  169: {
+    ar: 2,
+    nm: 'swap',
+    doc: '**swap** *Register1* *Register2*\nSwaps the contents of two registers.'
+  },
+  170: {
+    ar: 4,
+    nm: 'bs_start_match4',
+    doc: '**bs_start_match4** *Fail* *Bin* *Live* *Dst*\nAs *bs_start_match3*, but the fail label can be \'no_fail\' when we know it will never fail at runtime, or \'resume\' when we know the input is a match context.'
+  }  
 };
 
 export function get_doc(name: string): string {
-  for (let opcode = 1; opcode < 164; opcode++) {
+  for (let opcode = 1; opcode < 171; opcode++) {
     if (opcodes[opcode].nm === name) {
       return opcodes[opcode].doc;
     }
