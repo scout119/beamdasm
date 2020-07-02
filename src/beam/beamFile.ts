@@ -760,7 +760,7 @@ export default class BeamFile implements beamdasm.Beam {
     while (offset < length) {
       let byteCode = buffer.readUInt8(offset++);
 
-      if (byteCode > 163) {
+      if (byteCode > 170) {
         console.log(`Illegal opcode ${byteCode}`);
       }
 
