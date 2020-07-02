@@ -508,6 +508,10 @@ export default class BeamFile implements beamdasm.Beam {
         return this.readBinaryText(buffer, offset);
       case 110:
         return this.readSmallBigNum(buffer, offset);
+      case 113:
+        return this.readExport(buffer, offset);
+      case 115:
+        return this.readSmallAtom(buffer, offset);
       case 116:
         return this.readMap(buffer, offset);
       default:
@@ -574,6 +578,25 @@ export default class BeamFile implements beamdasm.Beam {
     let length = buffer.readUInt16BE(offset); offset += 2;
 
     return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
+  }
+
+  readSmallAtom(buffer: Buffer, offset: number): any {
+    let length = buffer.readUInt8(offset); offset += 1;
+
+    return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
+  }
+
+  readExport(buffer: Buffer, offset: number): any {
+    let module = this.readObject(buffer.readUInt8(offset++), buffer, offset);
+    offset = module.offset;
+
+    let func = this.readObject(buffer.readUInt8(offset++), buffer, offset);
+    offset = func.offset;
+
+    let arity = this.readObject(buffer.readUInt8(offset++), buffer, offset);
+    offset = arity.offset;
+
+    return { data: "fun " + module.data + ":'" + func.data + "'/" + arity.data, offset: offset }
   }
 
   readString(buffer: Buffer, offset: number): any {
