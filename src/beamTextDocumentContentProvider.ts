@@ -51,13 +51,13 @@ export default class BeamTextDocumentContentProvider implements vscode.TextDocum
       return;
     }
 
-    let beamFilePath: string = uri.fsPath.substr(0, uri.fsPath.length - 5);
+    const beamFilePath: string = uri.fsPath.substr(0, uri.fsPath.length - 5);
 
     if (!fs.existsSync(beamFilePath)) {
       return;
     }
 
-    let beamFile = BeamCache.getBeamFile(beamFilePath);
+    const beamFile = BeamCache.getBeamFile(beamFilePath);
 
     let str = '';
 
@@ -65,7 +65,7 @@ export default class BeamTextDocumentContentProvider implements vscode.TextDocum
       let str = '';
 
       if (section in beamFile.sections) {
-        let funcName = `format${section}`;
+        const funcName = `format${section}`;
         str = 'BEAM section is missing formatting function';
         if (funcName in formatter) {
           str = formatter[funcName](beamFile);
@@ -75,9 +75,9 @@ export default class BeamTextDocumentContentProvider implements vscode.TextDocum
     }
 
     //let configuration = vscode.workspace.getConfiguration('beamdasm');
-    let formatterToUse = 'beamdasm'; //configuration['formatter'];
+    const formatterToUse = 'beamdasm'; //configuration['formatter'];
 
-    let section = uri.scheme.substr(4, 4);
+    const section = uri.scheme.substr(4, 4);
     str = formatSection(this.formatters[formatterToUse], section);
 
     return str;

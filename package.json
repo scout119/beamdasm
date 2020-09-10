@@ -1,112 +1,119 @@
 {
-    "name": "beamdasm",
-    "displayName": "BEAMdasm",
-    "description": "BEAM file disassembler",
-    "license": "SEE LICENSE IN LICENSE.md",
-    "version": "1.1.0",
-    "publisher": "Valentin",
-    "engines": {
-        "vscode": "^1.21.0"
-    },
-    "author": {
-        "name": "Valentin Ivanov"
-    },
-    "categories": [
-        "Programming Languages",
-        "Other"
+  "name": "beamdasm",
+  "displayName": "BEAMdasm",
+  "description": "BEAM file disassembler",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "version": "1.1.1",
+  "publisher": "Valentin",
+  "engines": {
+    "vscode": "^1.21.0"
+  },
+  "author": {
+    "name": "Valentin Ivanov"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "beam",
+    "erlang",
+    "elixir",
+    "disassembler"
+  ],
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1E1E1E",
+    "theme": "dark"
+  },
+  "activationEvents": [
+    "onView:beamdasm.beamFilesTree",
+    "onCommand:beamdasm.disassemble"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "languages": [
+      {
+        "id": "beam",
+        "extensions": [
+          ".beam",
+          ".beam_code"
+        ]
+      }
     ],
-    "keywords": [
-        "beam",
-        "erlang",
-        "elixir",
-        "disassembler"
+    "grammars": [
+      {
+        "language": "beam",
+        "scopeName": "source.beamdasm",
+        "path": "./syntaxes/beamdasm.tmLanguage.json"
+      }
     ],
-    "icon": "media/icon.png",
-    "galleryBanner": {
-        "color": "#1E1E1E",
-        "theme": "dark"
-    },
-    "activationEvents": [
-        "onView:beamdasm.beamFilesTree",
-        "onCommand:beamdasm.disassemble"
-    ],
-    "main": "./out/extension",
-    "contributes": {
-        "languages": [
-            {
-                "id": "beam",
-                "extensions": [
-                    ".beam",
-                    ".beam_code"
-                ]
-            }
-        ],
-        "grammars": [
-            {
-                "language": "beam",
-                "scopeName": "source.beamdasm",
-                "path": "./syntaxes/beamdasm.tmLanguage.json"
-            }
-        ],
-        "commands": [
-            {
-                "when": "resourceLangId == beam",
-                "command": "beamdasm.disassemble",
-                "title": "Disassemble BEAM"
-            },
-            {
-                "command": "beamdasm.refreshBeamTree",
-                "title": "Refresh",
-                "icon": {
-                    "light": "resources/light/refresh.svg",
-                    "dark": "resources/dark/refresh.svg"
-                }
-            }
-        ],
-        "views": {
-            "explorer": [
-                {
-                    "id": "beamdasm.beamFilesTree",
-                    "name": "BEAM files"
-                }
-            ]
-        },
-        "menus": {
-            "explorer/context": [
-                {
-                    "when": "resourceLangId == beam",
-                    "command": "beamdasm.disassemble"
-                }
-            ],
-            "view/title": [
-                {
-                    "when": "view == beamdasm.beamFilesTree",
-                    "command": "beamdasm.refreshBeamTree",
-                    "group": "navigation"
-                }
-            ]
+    "commands": [
+      {
+        "when": "resourceLangId == beam",
+        "command": "beamdasm.disassemble",
+        "title": "Disassemble BEAM"
+      },
+      {
+        "command": "beamdasm.refreshBeamTree",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
         }
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "beamdasm.beamFilesTree",
+          "name": "BEAM files"
+        }
+      ]
     },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
-    },
-    "devDependencies": {
-        "@types/mocha": "^2.2.42",
-        "@types/node": "^7.10.9",
-        "tslint": "^5.20.1",
-        "typescript": "^2.9.2",
-        "vscode": "^1.1.36"
-    },
-    "bugs": {
-        "url": "https://github.com/scout119/beamdasm/issues"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/scout119/beamdasm"
-    },
-    "homepage": "https://github.com/scout119/beamdasm/blob/master/README.md"
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceLangId == beam",
+          "command": "beamdasm.disassemble"
+        }
+      ],
+      "view/title": [
+        {
+          "when": "view == beamdasm.beamFilesTree",
+          "command": "beamdasm.refreshBeamTree",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "lint": "eslint . --ext .ts,.tsx",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/mocha": "^5.2.6",
+    "@types/node": "^12.12.0",
+    "@types/vscode": "^1.21.0",
+    "@typescript-eslint/eslint-plugin": "^4.1.0",
+    "@typescript-eslint/parser": "^4.1.0",
+    "glob": "^7.1.4",
+    "mocha": "^6.1.4",
+    "eslint": "^7.8.1",
+    "typescript": "^3.9.4",
+    "vscode-test": "^1.3.0"
+  },
+  "bugs": {
+    "url": "https://github.com/scout119/beamdasm/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/scout119/beamdasm"
+  },
+  "homepage": "https://github.com/scout119/beamdasm/blob/master/README.md"
 }

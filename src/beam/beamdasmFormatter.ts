@@ -22,12 +22,12 @@ import * as Tags from './tags';
 let lbl: (val: number) => string;
 
 function instructionToString(beamFile: beamdasm.Beam, obj: any, func: number): string {
-  let name = opcodes[obj.op].nm;
+  const name = opcodes[obj.op].nm;
   let str = `  ${name}` + ' '.repeat(20 - name.length);
 
   for (let i = 0; i < opcodes[obj.op].ar; i++) {
     if (i === func) {
-      let func_info = beamFile.imports[obj.params[i].data];
+      const func_info = beamFile.imports[obj.params[i].data];
       str += ` ${beamFile.atoms[func_info.module]}:${beamFile.atoms[func_info.function]}/${func_info.arity}`;
     }
     else {
@@ -48,7 +48,7 @@ function termToString(beamFile: beamdasm.Beam, obj: any): string {
     return `Y[${obj.data}]`;
   }
   if (obj.tag === Tags.TAG_ATOM) {
-    let value = beamFile.atoms[obj.data];
+    const value = beamFile.atoms[obj.data];
     return value === undefined ? `.` : `${value}`;
   }
   if (obj.tag === Tags.TAG_EXT_FLOAT_REGISTER) {
@@ -100,7 +100,7 @@ export class BeamdasmFormatter implements beamdasm.BeamFormatter {
     str += this.formatModuleInfo(beamFile);
 
     for (let i = 0; i < beamFile.code.length; i++) {
-      let obj = beamFile.code[i];
+      const obj = beamFile.code[i];
 
       if (obj.op === 2) {
         str += `\n//Function  ${beamFile.atoms[obj.params[0].data]}:${beamFile.atoms[obj.params[1].data]}/${obj.params[2].data}\n`;
@@ -132,7 +132,7 @@ export class BeamdasmFormatter implements beamdasm.BeamFormatter {
       if (obj.line) {
         //skip zero lines
         if (obj.line[0].data !== 0) {
-          let line_ref = beamFile.lineRefs[obj.line[0].data];
+          const line_ref = beamFile.lineRefs[obj.line[0].data];
           str += ` //line ${beamFile.lineFNames[line_ref[0]]}, ${line_ref[1]}`;
         }
       }
@@ -155,7 +155,7 @@ export class BeamdasmFormatter implements beamdasm.BeamFormatter {
 
   formatatu8(beamFile: beamdasm.Beam): string {
     let str = 'Atoms:   ';
-    let offset = str.length;
+    const offset = str.length;
 
     for (let i = 0; i < beamFile.atoms.length; i++) {
       str += (i !== 0) ? ' '.repeat(offset) : '';
@@ -168,10 +168,10 @@ export class BeamdasmFormatter implements beamdasm.BeamFormatter {
 
   formatimpt(beamFile: beamdasm.Beam): string {
     let str = 'Imports: ';
-    let offset = str.length;
+    const offset = str.length;
 
     for (let i = 0; i < beamFile.imports.length; i++) {
-      let func_info = beamFile.imports[i];
+      const func_info = beamFile.imports[i];
       str += (i !== 0) ? ' '.repeat(offset) : '';
       str += `${func_info.module}/${func_info.function}/${func_info.arity} ${beamFile.atoms[func_info.module]}:${beamFile.atoms[func_info.function]}/${func_info.arity}\n`;
     }
@@ -191,9 +191,9 @@ export class BeamdasmFormatter implements beamdasm.BeamFormatter {
     }
 
     let str = 'Exports: ';
-    let offset = str.length;
+    const offset = str.length;
     for (let i = 0; i < beamFile.exports.length; i++) {
-      let func_info = beamFile.exports[i];
+      const func_info = beamFile.exports[i];
       str += (i !== 0) ? ' '.repeat(offset) : '';
       str += `${func_info.function}/${func_info.arity}/${func_info.label} ${beamFile.atoms[func_info.function]}/${func_info.arity} ${lbl(func_info.label)}\n`;
     }
@@ -211,10 +211,10 @@ export class BeamdasmFormatter implements beamdasm.BeamFormatter {
     }
 
     let str = 'Private: ';
-    let offset = str.length;
+    const offset = str.length;
 
     for (let i = 0; i < beamFile.LocT.length; i++) {
-      let func_info = beamFile.LocT[i];
+      const func_info = beamFile.LocT[i];
       str += (i !== 0) ? ' '.repeat(offset) : '';
       str += `${func_info.function}/${func_info.arity}/${func_info.label} ${beamFile.atoms[func_info.function]}/${func_info.arity} ${lbl(func_info.label)}\n`;
     }
@@ -225,7 +225,7 @@ export class BeamdasmFormatter implements beamdasm.BeamFormatter {
   formatstrt(beamFile: beamdasm.Beam): string {
     let str = 'Strings: ';
 
-    str += `\"${beamFile.StrT}\"\n`;
+    str += `"${beamFile.StrT}"\n`;
 
     str += '\n';
     return str;

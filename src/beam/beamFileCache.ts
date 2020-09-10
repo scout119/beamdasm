@@ -30,7 +30,7 @@ class BeamCacheSingleton
     return this._instance;
   }
   
-  beamFilePath: string = '';
+  beamFilePath = '';
   beamFile: beamdasm.Beam | undefined = undefined;
 
   public getBeamFile(path: string): beamdasm.Beam {
@@ -44,4 +44,4 @@ class BeamCacheSingleton
   }
 }
 
-export let BeamCache = BeamCacheSingleton.Instance;
+export const BeamCache = BeamCacheSingleton.Instance;

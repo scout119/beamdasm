@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Erlang assembly formatter
 
+## 1.1.1
+
+- Fix for issue [#9](https://github.com/scout119/beamdasm/issues/9)
+- Merged PRs [#7](https://github.com/scout119/beamdasm/pull/7) [#8](https://github.com/scout119/beamdasm/pull/7)
+- Switched to ESLint
+
 ## 1.1.0
 
 - Added support for OTP 22, OTP 23 instruction codes

@@ -20,7 +20,7 @@ import List from './terms/list';
 import Tuple from './terms/tuple';
 import Map from './terms/map';
 
-import { opcodes } from './opcodes';
+import { opcodes, MAX_OPCODE } from './opcodes';
 
 import * as Tags from './tags';
 /// <reference path="interface.ts"/>
@@ -28,22 +28,22 @@ import * as Tags from './tags';
 export default class BeamFile implements beamdasm.Beam {
 
   readonly code: any[] = [];
-  _codeNumberOfFunctions: number = 0;
-  codeNumberOfLabels: number = 0;
-  _codeHighestOpcode: number = 0;
-  _codeInstructionSet: number = 0;
-  _codeExtraFields: number = 0;
+  _codeNumberOfFunctions = 0;
+  codeNumberOfLabels = 0;
+  _codeHighestOpcode = 0;
+  _codeInstructionSet = 0;
+  _codeExtraFields = 0;
 
   sections: any = {};
 
   atoms: string[] = ["nil"];
-  numberOfAtoms: number = 0;
-  maxAtomNameLength: number = 0;
+  numberOfAtoms = 0;
+  maxAtomNameLength = 0;
 
   imports: any[] = [];
   exports: any[] = [];
   LocT: any[] = [];
-  StrT: string = "";
+  StrT = "";
 
   literals: any[] = [];
   attributes: any;
@@ -52,12 +52,12 @@ export default class BeamFile implements beamdasm.Beam {
 
   lineRefs: any[] = [];
   lineFNames: any[] = [];
-  lineInstrCount: number = 0;
+  lineInstrCount = 0;
 
 
   static fromFile(filePath: string): BeamFile {
 
-    let beamFile = new BeamFile();
+    const beamFile = new BeamFile();
 
     beamFile.readBeamFile(filePath);
 
@@ -66,17 +66,17 @@ export default class BeamFile implements beamdasm.Beam {
 
   readBeamFile(filePath: string) {
     
-    let buffer: Buffer = fs.readFileSync(filePath);
+    const buffer: Buffer = fs.readFileSync(filePath);
 
-    let for1 = buffer.toString('utf8', 0, 4).toLowerCase();
+    const for1 = buffer.toString('utf8', 0, 4).toLowerCase();
 
     if (for1 !== "for1") {
       throw Error("Not a valid BEAM binary");
     }
 
-    let length = buffer.readUInt32BE(4);
+    const length = buffer.readUInt32BE(4);
 
-    let beam = buffer.toString('utf8', 8, 12).toLowerCase();
+    const beam = buffer.toString('utf8', 8, 12).toLowerCase();
 
     if (beam !== "beam") {
       throw Error("Not a valid BEAM binary");
@@ -89,8 +89,8 @@ export default class BeamFile implements beamdasm.Beam {
     //We want to read them in particular order, not the order
     //chunks are present in the file
     while (offset < length) {
-      let name = buffer.toString('utf8', offset, offset + 4);
-      let size = buffer.readUInt32BE(offset + 4);
+      const name = buffer.toString('utf8', offset, offset + 4);
+      const size = buffer.readUInt32BE(offset + 4);
 
       this.sections[name.toLowerCase()] = { start: offset + 8, length: size };
 
@@ -131,32 +131,32 @@ export default class BeamFile implements beamdasm.Beam {
 
   readDbgiSection(buffer: Buffer) {
     if ('dbgi' in this.sections) {
-      let section = this.sections['dbgi'];
+      const section = this.sections['dbgi'];
       section.name = 'Debug Info (Dbgi)';
       let offset = section.start;
-      let length = section.length;
+      const length = section.length;
 
       buffer.readUInt8(offset++); //131 marker
       buffer.readUInt8(offset++); //80
 
       buffer.readUInt32BE(offset); offset += 4; //uncompressedSize 
-      let chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
+      const chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
 
       offset = 0;
-      let tag = chunk.readUInt8(offset);
-      let obj = this.readObject(tag, chunk, offset + 1);
+      const tag = chunk.readUInt8(offset);
+      const obj = this.readObject(tag, chunk, offset + 1);
       console.log(`${obj.data}`);
     }
   }
 
   readExDpSection(buffer: Buffer) {
     if ('exdp' in this.sections) {
-      let section = this.sections['exdp'];
+      const section = this.sections['exdp'];
       section.name = 'ExDp';
       let offset = section.start;
       buffer.readUInt8(offset++); //131
-      let tag = buffer.readUInt8(offset++);
-      let obj = this.readObject(tag, buffer, offset);
+      const tag = buffer.readUInt8(offset++);
+      const obj = this.readObject(tag, buffer, offset);
 
       console.log(`${obj.data}`);
     }
@@ -164,20 +164,20 @@ export default class BeamFile implements beamdasm.Beam {
 
   readExDcSection(buffer: Buffer) {
     if ('exdc' in this.sections) {
-      let section = this.sections['exdc'];
+      const section = this.sections['exdc'];
       section.name = 'ExDoc (ExDc)';
       let offset = section.offset;
-      let length = section.length;
+      const length = section.length;
       buffer.readUInt8(offset++); //131 marker
       buffer.readUInt8(offset++); //80
       buffer.readUInt32BE(offset); offset += 4; //uncompressedSize
 
-      let chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
+      const chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
 
 
       offset = 0;
-      let tag = chunk.readUInt8(offset);
-      let obj = this.readObject(tag, chunk, offset + 1);
+      const tag = chunk.readUInt8(offset);
+      const obj = this.readObject(tag, chunk, offset + 1);
 
       console.log(`${obj.data}`);
     }
@@ -188,7 +188,7 @@ export default class BeamFile implements beamdasm.Beam {
   readFuntSection(buffer: Buffer) {
 
     if ('funt' in this.sections) {
-      let section = this.sections['funt'];
+      const section = this.sections['funt'];
       section.name = 'Functions/Lambdas (FunT)';
 
       this._functions = [];
@@ -204,12 +204,12 @@ export default class BeamFile implements beamdasm.Beam {
       offset += 4;
 
       while (count-- > 0) {
-        let atom_index = buffer.readUInt32BE(offset); offset += 4;
-        let arity = buffer.readUInt32BE(offset); offset += 4;
-        let code_position = buffer.readUInt32BE(offset); offset += 4;
-        let index = buffer.readUInt32BE(offset); offset += 4;
-        let n_free = buffer.readInt32BE(offset); offset += 4;
-        let ouniq = buffer.readUInt32BE(offset); offset += 4;
+        const atom_index = buffer.readUInt32BE(offset); offset += 4;
+        const arity = buffer.readUInt32BE(offset); offset += 4;
+        const code_position = buffer.readUInt32BE(offset); offset += 4;
+        const index = buffer.readUInt32BE(offset); offset += 4;
+        const n_free = buffer.readInt32BE(offset); offset += 4;
+        const ouniq = buffer.readUInt32BE(offset); offset += 4;
 
         this._functions.push({
           atom: atom_index,
@@ -226,7 +226,7 @@ export default class BeamFile implements beamdasm.Beam {
   readLineSection(buffer: Buffer) {
 
     if ('line' in this.sections) {
-      let section = this.sections['line'];
+      const section = this.sections['line'];
       section.name = 'Line Numbers (Line)';
       let offset = section.start;
 
@@ -245,7 +245,7 @@ export default class BeamFile implements beamdasm.Beam {
       let fname_index = 0;
 
       while (num_line_refs-- > 0) {
-        let term = this.readTerm(buffer, offset);
+        const term = this.readTerm(buffer, offset);
         offset = term.offset;
 
         if (term.tag === Tags.TAG_ATOM) {
@@ -258,8 +258,8 @@ export default class BeamFile implements beamdasm.Beam {
       }
 
       while (num_filenames-- > 0) {
-        let size = buffer.readUInt16BE(offset); offset += 2;
-        let filename = buffer.toString('utf8', offset, offset + size);
+        const size = buffer.readUInt16BE(offset); offset += 2;
+        const filename = buffer.toString('utf8', offset, offset + size);
         offset += size;
         this.lineFNames.push(filename);
       }
@@ -270,14 +270,14 @@ export default class BeamFile implements beamdasm.Beam {
 
     if ('litt' in this.sections) {
 
-      let section = this.sections['litt'];
+      const section = this.sections['litt'];
       section.name = 'Literals (LitT)';
       let offset = section.start;
-      let length = section.length;
+      const length = section.length;
 
       buffer.readUInt32BE(offset); offset += 4; //uncompressedSize
 
-      let chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
+      const chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
 
       let numValues = chunk.readUInt32BE(0);
 
@@ -285,8 +285,8 @@ export default class BeamFile implements beamdasm.Beam {
       while (numValues-- > 0) {
         //Ignore "skip" UInt32 value and "marker" byte"
         offset += 5;
-        let tag = chunk.readUInt8(offset);
-        let obj = this.readObject(tag, chunk, offset + 1);
+        const tag = chunk.readUInt8(offset);
+        const obj = this.readObject(tag, chunk, offset + 1);
         offset = obj.offset;
         this.literals.push(obj.data);
       }
@@ -295,37 +295,37 @@ export default class BeamFile implements beamdasm.Beam {
 
   readAttrSection(buffer: Buffer) {
     if ('attr' in this.sections) {
-      let section = this.sections['attr'];
+      const section = this.sections['attr'];
       section.name = 'Attributes (Attr)';
-      let offset = section.start;
+      const offset = section.start;
       //let marker = buffer.readUInt8(offset);
-      let tag = buffer.readUInt8(offset + 1);
+      const tag = buffer.readUInt8(offset + 1);
       this.attributes = this.readObject(tag, buffer, offset + 2).data;
     }
   }
 
   readCInfSection(buffer: Buffer) {
     if ('cinf' in this.sections) {
-      let section = this.sections['cinf'];
+      const section = this.sections['cinf'];
       section.name = 'Compilation Info (CInf)';
-      let offset = section.start;
+      const offset = section.start;
       //let marker = buffer.readUInt8(offset);
-      let tag = buffer.readUInt8(offset + 1);
+      const tag = buffer.readUInt8(offset + 1);
       this.compilationInfo = this.readObject(tag, buffer, offset + 2).data;
     }
   }
 
   readStrtSection(buffer: Buffer) {
     if ('strt' in this.sections) {
-      let section = this.sections['strt'];
+      const section = this.sections['strt'];
       section.name = 'Strings (StrT)';
 
-      let length = section.length;
+      const length = section.length;
       if (length === 0) {
         section.empty = true;
         return;
       }
-      let offset = section.start;
+      const offset = section.start;
       this.StrT = buffer.toString('utf8', offset, offset + length);
     }
   }
@@ -333,7 +333,7 @@ export default class BeamFile implements beamdasm.Beam {
   readImptSection(buffer: Buffer) {
 
     if ('impt' in this.sections) {
-      let section = this.sections['impt'];
+      const section = this.sections['impt'];
       section.name = 'Imports (ImpT)';
       this.imports = [];
 
@@ -348,9 +348,9 @@ export default class BeamFile implements beamdasm.Beam {
       offset += 4;
 
       while (nImports-- > 0) {
-        let module = buffer.readUInt32BE(offset); offset += 4;
-        let func = buffer.readUInt32BE(offset); offset += 4;
-        let arity = buffer.readUInt32BE(offset); offset += 4;
+        const module = buffer.readUInt32BE(offset); offset += 4;
+        const func = buffer.readUInt32BE(offset); offset += 4;
+        const arity = buffer.readUInt32BE(offset); offset += 4;
 
         this.imports.push({ module: module, function: func, arity: arity });
       }
@@ -363,7 +363,7 @@ export default class BeamFile implements beamdasm.Beam {
 
       this.exports = [];
 
-      let section = this.sections['expt'];
+      const section = this.sections['expt'];
       section.name = 'Exports (ExpT)';
       let offset = section.start;
       let nExport = buffer.readUInt32BE(offset);
@@ -376,9 +376,9 @@ export default class BeamFile implements beamdasm.Beam {
       offset += 4;
 
       while (nExport-- > 0) {
-        let func = buffer.readUInt32BE(offset); offset += 4;
-        let arity = buffer.readUInt32BE(offset); offset += 4;
-        let label = buffer.readUInt32BE(offset); offset += 4;
+        const func = buffer.readUInt32BE(offset); offset += 4;
+        const arity = buffer.readUInt32BE(offset); offset += 4;
+        const label = buffer.readUInt32BE(offset); offset += 4;
 
         this.exports.push({ function: func, arity: arity, label: label });
       }
@@ -390,7 +390,7 @@ export default class BeamFile implements beamdasm.Beam {
     if ('loct' in this.sections) {
       this.LocT = [];
 
-      let section = this.sections['loct'];
+      const section = this.sections['loct'];
       section.name = 'Local Functions (LocT)';
 
       let offset = section.start;
@@ -405,9 +405,9 @@ export default class BeamFile implements beamdasm.Beam {
       offset += 4;
 
       while (nLocals-- > 0) {
-        let func = buffer.readUInt32BE(offset); offset += 4;
-        let arity = buffer.readUInt32BE(offset); offset += 4;
-        let label = buffer.readUInt32BE(offset); offset += 4;
+        const func = buffer.readUInt32BE(offset); offset += 4;
+        const arity = buffer.readUInt32BE(offset); offset += 4;
+        const label = buffer.readUInt32BE(offset); offset += 4;
 
         this.LocT.push({ function: func, arity: arity, label: label });
       }
@@ -416,10 +416,10 @@ export default class BeamFile implements beamdasm.Beam {
 
   readCodeSection(buffer: Buffer) {
     if ('code' in this.sections) {
-      let section = this.sections['code'];
+      const section = this.sections['code'];
       section.name = 'Code section (Code)';
       let offset = section.start;
-      let length = section.length;
+      const length = section.length;
 
       this._codeExtraFields = buffer.readUInt32BE(offset); offset += 4;
       this._codeInstructionSet = buffer.readUInt32BE(offset); offset += 4;
@@ -433,7 +433,7 @@ export default class BeamFile implements beamdasm.Beam {
 
   readAtu8Section(buffer: Buffer) {
     if ('atu8' in this.sections) {
-      let section = this.sections['atu8'];
+      const section = this.sections['atu8'];
       section.name = 'Atoms (AtU8)';
       let offset = section.start;
 
@@ -449,8 +449,8 @@ export default class BeamFile implements beamdasm.Beam {
       let maxLength = 0;
 
       while (nAtoms-- > 0) {
-        let atomLength = buffer.readUInt8(offset);
-        let atom = buffer.toString('utf8', offset + 1, offset + 1 + atomLength);
+        const atomLength = buffer.readUInt8(offset);
+        const atom = buffer.toString('utf8', offset + 1, offset + 1 + atomLength);
         maxLength = ( atom.length > maxLength) ? atom.length : maxLength;
         offset = offset + 1 + atomLength;
         this.atoms.push(atom);
@@ -462,7 +462,7 @@ export default class BeamFile implements beamdasm.Beam {
 
   readAtomSection(buffer: Buffer) {
     if ('atom' in this.sections) {
-      let section = this.sections['atom'];
+      const section = this.sections['atom'];
       section.name = 'Atoms (Atom)';
       let offset = section.start;
 
@@ -475,8 +475,8 @@ export default class BeamFile implements beamdasm.Beam {
       offset += 4;
 
       while (nAtoms-- > 0) {
-        let atomLength = buffer.readUInt8(offset);
-        let atom = buffer.toString('latin1', offset + 1, offset + 1 + atomLength);
+        const atomLength = buffer.readUInt8(offset);
+        const atom = buffer.toString('latin1', offset + 1, offset + 1 + atomLength);
         offset = offset + 1 + atomLength;
         this.atoms.push(atom);
       }
@@ -484,17 +484,20 @@ export default class BeamFile implements beamdasm.Beam {
   }
 
   //TODO: implement the rest of the terms
-  readObject(tag: number, buffer: Buffer, offset: number): any {
+  //https://github.com/erlang/otp/blob/master/lib/jinterface/java_src/com/ericsson/otp/erlang/OtpExternal.java
+  //https://erlang.org/doc/apps/erts/erl_ext_dist.html
 
+  readObject(tag: number, buffer: Buffer, offset: number): any {
     switch (tag) {
-      case 70: {
+      case 70: 
+      {
         return { data: "float8bytes", offset: offset + 8 };
       }
       case 97:
         return { data: buffer.readUInt8(offset), offset: offset + 1 };
       case 98:
         return { data: buffer.readUInt32BE(offset), offset: offset + 4 };
-      case 100:
+      case 100: //ATOM_EXT (deprecated)
         return this.readAtom(buffer, offset);
       case 104:
         return this.readSmallTuple(buffer, offset);
@@ -510,10 +513,14 @@ export default class BeamFile implements beamdasm.Beam {
         return this.readSmallBigNum(buffer, offset);
       case 113:
         return this.readExport(buffer, offset);
-      case 115:
+      case 115: //SMALL_ATOM_EXT (deprecated)
         return this.readSmallAtom(buffer, offset);
       case 116:
         return this.readMap(buffer, offset);
+      case 118:
+        return this.readAtomUtf8(buffer, offset);
+      case 119:
+        return this.readSmallAtomUtf8(buffer, offset);
       default:
         console.log(`Term: ${tag} is not implmented`);
         return { data: null };
@@ -521,13 +528,13 @@ export default class BeamFile implements beamdasm.Beam {
   }
 
   readList(buffer: Buffer, offset: number): any {
-    let list = new List();
+    const list = new List();
 
     let listLength = buffer.readUInt32BE(offset); offset += 4;
 
     while (listLength-- > 0) {
-      let tag = buffer.readUInt8(offset++);
-      let obj = this.readObject(tag, buffer, offset);
+      const tag = buffer.readUInt8(offset++);
+      const obj = this.readObject(tag, buffer, offset);
       list.add(obj.data);
       offset = obj.offset;
     }
@@ -539,13 +546,13 @@ export default class BeamFile implements beamdasm.Beam {
   }
 
   readSmallTuple(buffer: Buffer, offset: number): any {
-    let tuple = new Tuple();
+    const tuple = new Tuple();
 
     let arity = buffer.readUInt8(offset++);
 
     while (arity-- > 0) {
-      let tag = buffer.readUInt8(offset++);
-      let obj = this.readObject(tag, buffer, offset);
+      const tag = buffer.readUInt8(offset++);
+      const obj = this.readObject(tag, buffer, offset);
       tuple.add(obj.data);
       offset = obj.offset;
     }
@@ -556,15 +563,15 @@ export default class BeamFile implements beamdasm.Beam {
   readMap(buffer: Buffer, offset: number): any {
     let arity = buffer.readUInt32BE(offset); offset += 4;
 
-    let map = new Map();
+    const map = new Map();
 
     while (arity-- > 0) {
-      let keyTag = buffer.readUInt8(offset++);
-      let keyObj = this.readObject(keyTag, buffer, offset);
+      const keyTag = buffer.readUInt8(offset++);
+      const keyObj = this.readObject(keyTag, buffer, offset);
       offset = keyObj.offset;
 
-      let valTag = buffer.readUInt8(offset++);
-      let valObj = this.readObject(valTag, buffer, offset);
+      const valTag = buffer.readUInt8(offset++);
+      const valObj = this.readObject(valTag, buffer, offset);
       offset = valObj.offset;
 
 
@@ -575,32 +582,44 @@ export default class BeamFile implements beamdasm.Beam {
   }
 
   readAtom(buffer: Buffer, offset: number): any {
-    let length = buffer.readUInt16BE(offset); offset += 2;
+    const length = buffer.readUInt16BE(offset); offset += 2;
+
+    return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
+  }
+
+  readAtomUtf8(buffer: Buffer, offset: number): any {
+    const length = buffer.readUInt16BE(offset); offset += 2;
 
     return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
   }
 
   readSmallAtom(buffer: Buffer, offset: number): any {
-    let length = buffer.readUInt8(offset); offset += 1;
+    const length = buffer.readUInt8(offset); offset += 1;
+
+    return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
+  }
+
+  readSmallAtomUtf8(buffer: Buffer, offset: number): any {
+    const length = buffer.readUInt8(offset); offset += 1;
 
     return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
   }
 
   readExport(buffer: Buffer, offset: number): any {
-    let module = this.readObject(buffer.readUInt8(offset++), buffer, offset);
+    const module = this.readObject(buffer.readUInt8(offset++), buffer, offset);
     offset = module.offset;
 
-    let func = this.readObject(buffer.readUInt8(offset++), buffer, offset);
+    const func = this.readObject(buffer.readUInt8(offset++), buffer, offset);
     offset = func.offset;
 
-    let arity = this.readObject(buffer.readUInt8(offset++), buffer, offset);
+    const arity = this.readObject(buffer.readUInt8(offset++), buffer, offset);
     offset = arity.offset;
 
-    return { data: "fun " + module.data + ":'" + func.data + "'/" + arity.data, offset: offset }
+    return { data: "fun " + module.data + ":'" + func.data + "'/" + arity.data, offset: offset };
   }
 
   readString(buffer: Buffer, offset: number): any {
-    let length = buffer.readUInt16BE(offset);
+    const length = buffer.readUInt16BE(offset);
     offset += 2;
 
     return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
@@ -608,7 +627,7 @@ export default class BeamFile implements beamdasm.Beam {
 
   //TODO: convert into a byte array instead
   readBinaryText(buffer: Buffer, offset: number): any {
-    let length = buffer.readUInt32BE(offset);
+    const length = buffer.readUInt32BE(offset);
     offset += 4;
 
     return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
@@ -617,8 +636,8 @@ export default class BeamFile implements beamdasm.Beam {
   readonly hex: (d: number) => string = (d: number) => ("0" + d.toString(16)).slice(-2).toUpperCase();
 
   readSmallBigNum(buffer: Buffer, offset: number): any {
-    let length = buffer.readUInt8(offset++);
-    let sign = buffer.readUInt8(offset++);
+    const length = buffer.readUInt8(offset++);
+    const sign = buffer.readUInt8(offset++);
 
     let result = sign === 0 ? "" : "-" + "0x";
 
@@ -631,7 +650,7 @@ export default class BeamFile implements beamdasm.Beam {
 
   readTag(value: number): number {
     //TODO: Get otp20 from file, somewhere?
-    let otp20 = true;
+    const otp20 = true;
     let index = value & 0x07;
 
     if (index >= 7) {
@@ -646,12 +665,12 @@ export default class BeamFile implements beamdasm.Beam {
   }
 
   readTerm(buffer: Buffer, offset: number): any {
-    let firstByte = buffer.readUInt8(offset++);
-    let tag = this.readTag(firstByte);
+    const firstByte = buffer.readUInt8(offset++);
+    const tag = this.readTag(firstByte);
 
     if (tag === Tags.TAG_EXT_LITERAL) {
       //Read index in literals table
-      let val = this.readTerm(buffer, offset);
+      const val = this.readTerm(buffer, offset);
       offset = val.offset;
       return {
         tag: tag,
@@ -661,11 +680,11 @@ export default class BeamFile implements beamdasm.Beam {
     }
 
     if (tag === Tags.TAG_EXT_LIST) {
-      let size = this.readTerm(buffer, offset);
+      const size = this.readTerm(buffer, offset);
       offset = size.offset;
-      let list: any[] = [];
+      const list: any[] = [];
       for (let i = 0; i < size.data; i++) {
-        let obj = this.readTerm(buffer, offset);
+        const obj = this.readTerm(buffer, offset);
         offset = obj.offset;
         list.push(obj);
       }
@@ -678,7 +697,7 @@ export default class BeamFile implements beamdasm.Beam {
 
     if (tag === Tags.TAG_EXT_FLOAT_REGISTER) {
       //Read register number
-      let val = this.readTerm(buffer, offset);
+      const val = this.readTerm(buffer, offset);
       //Would not hurt to assert the bellow assumption
       //i.e. assert( val.tag === TAG_LITERAL );
       offset = val.offset;
@@ -692,9 +711,9 @@ export default class BeamFile implements beamdasm.Beam {
       };
     }
     if (tag === Tags.TAG_EXT_ALLOC_LIST) {
-      let size = this.readTerm(buffer, offset);
+      const size = this.readTerm(buffer, offset);
       offset = size.offset;
-      let list = [];
+      const list = [];
       for (let i = 0; i < size.data; i++) {
         let obj = this.readTerm(buffer, offset);
         offset = obj.offset;
@@ -767,7 +786,7 @@ export default class BeamFile implements beamdasm.Beam {
     }
 
     //TODO: complete reading the data into a byte array
-    let sizeObject = this.readTerm(buffer, offset);
+    const sizeObject = this.readTerm(buffer, offset);
     // for( let i = 0; i<sizeObject.data; i++ )
     // {
     // }
@@ -781,9 +800,9 @@ export default class BeamFile implements beamdasm.Beam {
 
     length = offset + length;
     while (offset < length) {
-      let byteCode = buffer.readUInt8(offset++);
+      const byteCode = buffer.readUInt8(offset++);
 
-      if (byteCode > 170) {
+      if (byteCode > MAX_OPCODE) {
         console.log(`Illegal opcode ${byteCode}`);
       }
 
@@ -792,9 +811,9 @@ export default class BeamFile implements beamdasm.Beam {
       //   console.log('fdiv');
       // }
 
-      let list = [];
+      const list = [];
       for (let i = 0; i < opcodes[byteCode].ar; i++) {
-        let obj = this.readTerm(buffer, offset);
+        const obj = this.readTerm(buffer, offset);
         offset = obj.offset;
         list.push(obj);
       }

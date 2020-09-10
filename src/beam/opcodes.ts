@@ -499,8 +499,10 @@ export const opcodes: any = {
   }  
 };
 
+export const MAX_OPCODE = 170;
+
 export function get_doc(name: string): string {
-  for (let opcode = 1; opcode < 171; opcode++) {
+  for (let opcode = 1; opcode <= MAX_OPCODE; opcode++) {
     if (opcodes[opcode].nm === name) {
       return opcodes[opcode].doc;
     }

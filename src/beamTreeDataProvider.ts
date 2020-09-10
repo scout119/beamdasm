@@ -21,12 +21,12 @@ import { BeamCache } from './beam/beamFileCache';
 
 export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
 
-  private _didChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
-  readonly onDidChangeTreeData?: vscode.Event<vscode.TreeItem | undefined> = this._didChangeTreeData.event;
+  private _didChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
+  readonly onDidChangeTreeData?: vscode.Event<vscode.TreeItem | undefined | void> = this._didChangeTreeData.event;
 
   constructor(context: vscode.ExtensionContext, private workspaceRoot: string | undefined, private supportedSections: string[]) {
 
-    let watcher = vscode.workspace.createFileSystemWatcher('**/*.{beam}');
+    const watcher = vscode.workspace.createFileSystemWatcher('**/*.{beam}');
 
     context.subscriptions.push(watcher);
     watcher.onDidChange(_ => triggerUpdateTree(), undefined, context.subscriptions);
@@ -36,8 +36,8 @@ export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vsc
     //For some reason onDidDelete is not firing when file is deleted outside of VS Code
     if (workspaceRoot && fs.existsSync(workspaceRoot)) {
       //Watcher is not 100% consistent on all platforms     
-      let fsWatcher = fs.watch(workspaceRoot, { recursive: true }, (event: string, filename: string | Buffer) => {
-        let file = (filename instanceof Buffer) ? filename.toString() : filename;
+      const fsWatcher = fs.watch(workspaceRoot, { recursive: true }, (event: string, filename: string | Buffer) => {
+        const file = (filename instanceof Buffer) ? filename.toString() : filename;
 
         if (path.extname(file) === ".beam") {
           if (event === 'rename') {
@@ -52,8 +52,8 @@ export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vsc
       }
     }
 
-    var timeout: any = null;
-    let provider = this;
+    let timeout: any = null;
+    const provider = this;
     function triggerUpdateTree() {
       if (timeout) {
         clearTimeout(timeout);
@@ -80,7 +80,7 @@ export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vsc
       return Promise.resolve([]);
     }
 
-    let root = this.workspaceRoot;
+    const root = this.workspaceRoot;
 
     return new Promise(resolve => {
 
@@ -88,19 +88,19 @@ export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vsc
 
       if (!element) {
 
-        let dev: BeamVirtualFolder = new BeamVirtualFolder('dev');
-        let prod: BeamVirtualFolder = new BeamVirtualFolder('prod');
-        let deps: BeamVirtualFolder = new BeamVirtualFolder('deps');
+        const dev: BeamVirtualFolder = new BeamVirtualFolder('dev');
+        const prod: BeamVirtualFolder = new BeamVirtualFolder('prod');
+        const deps: BeamVirtualFolder = new BeamVirtualFolder('deps');
 
-        let otherBeamFiles: any[] = [];
+        const otherBeamFiles: any[] = [];
 
         const isDirectory = (source: string) => fs.lstatSync(source).isDirectory();
 
         const getBeamFiles = (source: string) => {
-          let items = fs.readdirSync(source);
+          const items = fs.readdirSync(source);
           items.forEach((value: string) => {
             try {
-              let fullPath = path.join(source, value);
+              const fullPath = path.join(source, value);
               if (isDirectory(fullPath)) {
                 getBeamFiles(fullPath);
               } else {
@@ -120,15 +120,17 @@ export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vsc
                 }
               }
             } catch (ex) {
+              // continue regardless of error
             }
             finally {
+              // continue regardless of error
             }
           });
         };
 
         getBeamFiles(root);
 
-        let top: vscode.TreeItem[] = [dev, prod, deps];
+        const top: vscode.TreeItem[] = [dev, prod, deps];
         toBeResolved = top.concat(
           otherBeamFiles.map<vscode.TreeItem>(
             (item: any, index: number, array: any[]) => {
@@ -140,10 +142,10 @@ export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vsc
       } else if (element instanceof BeamFileItem) {
 
         if (fs.existsSync(element.filePath)) {
-          let beamFile = BeamCache.getBeamFile(element.filePath);
+          const beamFile = BeamCache.getBeamFile(element.filePath);
 
           for (const key in beamFile.sections) {
-            if (beamFile.sections.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(beamFile.sections,key)) {
               if (this.supportedSections.indexOf(key) !== -1 && !beamFile.sections[key].empty) {
                 toBeResolved.push(new BeamChunkItem(beamFile.sections[key].name, key, element.filePath, `${key}.svg`));
               }
@@ -187,9 +189,8 @@ class BeamFileItem extends vscode.TreeItem {
     };
   }
 
-  get tooltip(): string {
-    return this.filePath;
-  }
+
+  tooltip = this.filePath; 
 
   contextValue = 'beam';
 
@@ -204,7 +205,7 @@ class BeamChunkItem extends vscode.TreeItem {
   constructor(public readonly label: string, chunk: string, filePath: string, icon: string) {
     super(label, vscode.TreeItemCollapsibleState.None);
 
-    let sectionDocument = vscode.Uri.file(filePath.replace(".beam", `.beam_${chunk}`));
+    const sectionDocument = vscode.Uri.file(filePath.replace(".beam", `.beam_${chunk}`));
     this.command = {
       command: 'vscode.open',
       arguments: [sectionDocument.with({ scheme: `beam${chunk.toLowerCase()}` })],

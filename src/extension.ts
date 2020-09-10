@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.languages.registerHoverProvider("beam", new BeamHoverProvider()));
 
-    let supportedSections = [
+    const supportedSections = [
         "code",
         "impt",
         "expt",
@@ -41,19 +41,19 @@ export function activate(context: vscode.ExtensionContext) {
         "strt"
     ];
 
-    let contentProvider = new BeamTextDocumentContentProvider();
+    const contentProvider = new BeamTextDocumentContentProvider();
     supportedSections.forEach((section: string) => {
         context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(`beam${section}`, contentProvider));
     });
 
-    let beamTreeDataProvider = new BeamTreeDataProvider(context, rootPath, supportedSections);
+    const beamTreeDataProvider = new BeamTreeDataProvider(context, rootPath, supportedSections);
     context.subscriptions.push(vscode.window.registerTreeDataProvider("beamdasm.beamFilesTree", beamTreeDataProvider));
 
     context.subscriptions.push(vscode.commands.registerCommand('beamdasm.refreshBeamTree', () => beamTreeDataProvider.refresh()));
 
     context.subscriptions.push(vscode.commands.registerCommand('beamdasm.disassemble', (fileUri, beamFile?: any) => {
         if (!fileUri || !(fileUri instanceof vscode.Uri)) {
-            let editor = vscode.window.activeTextEditor;
+            const editor = vscode.window.activeTextEditor;
 
             if (!editor) {
                 return;
@@ -63,7 +63,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         if (fs.existsSync(fileUri.fsPath)) {
-            let sectionDocument = vscode.Uri.file(fileUri.fsPath.replace('.beam', '.beam_code'));
+            const sectionDocument = vscode.Uri.file(fileUri.fsPath.replace('.beam', '.beam_code'));
             vscode.commands.executeCommand('vscode.open', sectionDocument.with({ scheme: 'beamcode' }));
         }
     }));
@@ -119,7 +119,7 @@ function setupDecorators(context: vscode.ExtensionContext) {
 
         const ranges: vscode.DecorationOptions[] = [];
         let match: any;
-        while (match = regEx.exec(text)) {
+        while ( (match = regEx.exec(text)) != null ) {
             const startPos = activeEditor.document.positionAt(match.index);
             const endPos = activeEditor.document.positionAt(match.index + match[0].length);
             const decoration = { range: new vscode.Range(startPos, endPos) };

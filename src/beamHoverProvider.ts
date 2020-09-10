@@ -26,14 +26,14 @@ export default class BeamHoverProvider implements vscode.HoverProvider {
     }
 
     return new Promise(resolve => {
-      let range = document.getWordRangeAtPosition(position);
+      const range = document.getWordRangeAtPosition(position);
       if (range) {
-        let word = document.getText(range);
-        let doc = get_doc(word);
+        const word = document.getText(range);
+        const doc = get_doc(word);
         if (doc !== "") {
           //TODO: Pull markdown description if "word" is a valid opcode
-          let markdown = new vscode.MarkdownString(`#### Bytecode: ${word}\n`);
-          let lines = doc.split('\n');
+          const markdown = new vscode.MarkdownString(`#### Bytecode: ${word}\n`);
+          const lines = doc.split('\n');
           markdown.appendMarkdown('---\n');
           markdown.appendMarkdown(`>${lines[0]}\n\n`);
           markdown.appendMarkdown(`${lines[1]}  \n`);

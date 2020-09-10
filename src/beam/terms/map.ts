@@ -20,7 +20,7 @@ export default class Map {
   items: Tuple[] =[];
 
   add( key: any, value: any) {
-    let item = new Tuple();
+    const item = new Tuple();
     item.add(key);
     item.add(value);
     this.items.push(item);
