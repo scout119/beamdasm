@@ -496,10 +496,21 @@ export const opcodes: any = {
     ar: 4,
     nm: 'bs_start_match4',
     doc: '**bs_start_match4** *Fail* *Bin* *Live* *Dst*\nAs *bs_start_match3*, but the fail label can be \'no_fail\' when we know it will never fail at runtime, or \'resume\' when we know the input is a match context.'
-  }  
+  },
+  //OTP 24
+  171: {
+    ar: 3,
+    nm: 'make_fun3',
+    doc: '**make_fun3** *OldIndex* *Dst* *EnvTerms*\nBuild a fun with the environment in the list EnvTerms and put it into register *Dst*.'
+  },
+  172: {
+    ar: 1,
+    nm: 'init_yregs',
+    doc: '**init_yregs** *ListOfYRegs*\nInitialize the Y registers in the list.'
+  }
 };
 
-export const MAX_OPCODE = 170;
+export const MAX_OPCODE = 172;
 
 export function get_doc(name: string): string {
   for (let opcode = 1; opcode <= MAX_OPCODE; opcode++) {

@@ -40,7 +40,7 @@ export default class BeamHoverProvider implements vscode.HoverProvider {
           resolve(new vscode.Hover(markdown));
         }
       }
-      resolve();
+      resolve(null);
     });
   }
 }

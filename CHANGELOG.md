@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Erlang assembly formatter
 
+## 1.1.2
+
+- Added support for OTP 24
+- node modules version updates
+- Bumped Visual Studio Code version to ^1.52.0
+
 ## 1.1.1
 
 - Fix for issue [#9](https://github.com/scout119/beamdasm/issues/9)

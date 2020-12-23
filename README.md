@@ -37,7 +37,7 @@ To activate the extension select "Disassemble BEAM" from the context menu for a 
 
 ## Requirements
 
-Visual Studio Code 1.21.0
+Visual Studio Code 1.52.0
 
 ## Extension Settings
 
