@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## 1.1.4
 ## 1.1.3
 - Added new OpCodes 173-176
 - Renamed "Master" branch to "Main"
