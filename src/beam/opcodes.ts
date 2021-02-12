@@ -507,10 +507,30 @@ export const opcodes: any = {
     ar: 1,
     nm: 'init_yregs',
     doc: '**init_yregs** *ListOfYRegs*\nInitialize the Y registers in the list.'
+  },
+  173: {
+    ar: 2,
+    nm: 'recv_marker_bind',
+    doc: '**recv_marker_bind** *Marker* *Reference*\nAssociates Reference with a previously reserved marker.'
+  },
+  174: {
+    ar: 1,
+    nm: 'recv_marker_clear',
+    doc: '**recv_marker_reserve** *Marker*\nClears the receive marker associated with the given Reference.'
+  },
+  175: {
+    ar: 1,
+    nm: 'recv_marker_reserve',
+    doc: '**recv_marker_reserve** *Marker*\nCreates a receive marker which can be later bound to a reference.'
+  },
+  176: {
+    ar: 1,
+    nm: 'recv_marker_use',
+    doc: '**recv_marker_use** *Reference*\nSets the current receive cursor to the marker associated with the given Reference.'
   }
 };
 
-export const MAX_OPCODE = 172;
+export const MAX_OPCODE = 176;
 
 export function get_doc(name: string): string {
   for (let opcode = 1; opcode <= MAX_OPCODE; opcode++) {

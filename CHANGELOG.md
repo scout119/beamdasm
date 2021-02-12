@@ -7,11 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-- HTML views for sections
-
-- Navigation between view via links
-
-- Erlang assembly formatter
+## 1.1.3
+- Added new OpCodes 173-176
+- Renamed "Master" branch to "Main"
 
 ## 1.1.2
 
