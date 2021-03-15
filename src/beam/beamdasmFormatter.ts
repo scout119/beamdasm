@@ -22,6 +22,7 @@ import * as Tags from './tags';
 let lbl: (val: number) => string;
 
 let instructionHandlers: any = {
+  // https://github.com/erlang/otp/blob/OTP-23.2.7/lib/compiler/src/beam_disasm.erl#L992
   'bs_match_string': (beamFile: beamdasm.Beam, obj: any) => {
     let str = ` ${termToString(beamFile, obj.params[0])}`;
     str += ` ${termToString(beamFile, obj.params[1])}`;
@@ -32,6 +33,7 @@ let instructionHandlers: any = {
 
     return str + ' "' + arg + '"';
   },
+  // https://github.com/erlang/otp/blob/OTP-23.2.7/lib/compiler/src/beam_disasm.erl#L845
   'bs_put_string': (beamFile: beamdasm.Beam, obj: any) => {
     let size = obj.params[0].data;
     let offset = obj.params[1].data;
