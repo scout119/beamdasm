@@ -21,9 +21,34 @@ import * as Tags from './tags';
 
 let lbl: (val: number) => string;
 
+let instructionHandlers: any = {
+  'bs_match_string': (beamFile: beamdasm.Beam, obj: any) => {
+    let str = ` ${termToString(beamFile, obj.params[0])}`;
+    str += ` ${termToString(beamFile, obj.params[1])}`;
+
+    let size = Math.trunc((obj.params[2].data + 7)/8);
+    let offset = obj.params[3].data;
+    let arg = beamFile.StrT.substring(offset, offset + size);
+
+    return str + ' "' + arg + '"';
+  },
+  'bs_put_string': (beamFile: beamdasm.Beam, obj: any) => {
+    let size = obj.params[0].data;
+    let offset = obj.params[1].data;
+    let arg = beamFile.StrT.substring(offset, offset + size);
+
+    return ' "' + arg + '"';
+  }
+};
+
 function instructionToString(beamFile: beamdasm.Beam, obj: any, func: number): string {
   const name = opcodes[obj.op].nm;
   let str = `  ${name}` + ' '.repeat(20 - name.length);
+
+  if (instructionHandlers[name]) {
+    str += instructionHandlers[name](beamFile, obj);
+    return str;
+  }
 
   for (let i = 0; i < opcodes[obj.op].ar; i++) {
     if (i === func) {
