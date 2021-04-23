@@ -21,9 +21,36 @@ import * as Tags from './tags';
 
 let lbl: (val: number) => string;
 
+let instructionHandlers: any = {
+  // https://github.com/erlang/otp/blob/OTP-23.2.7/lib/compiler/src/beam_disasm.erl#L992
+  'bs_match_string': (beamFile: beamdasm.Beam, obj: any) => {
+    let str = ` ${termToString(beamFile, obj.params[0])}`;
+    str += ` ${termToString(beamFile, obj.params[1])}`;
+
+    let size = Math.trunc((obj.params[2].data + 7)/8);
+    let offset = obj.params[3].data;
+    let arg = beamFile.StrT.substring(offset, offset + size);
+
+    return str + ' "' + arg + '"';
+  },
+  // https://github.com/erlang/otp/blob/OTP-23.2.7/lib/compiler/src/beam_disasm.erl#L845
+  'bs_put_string': (beamFile: beamdasm.Beam, obj: any) => {
+    let size = obj.params[0].data;
+    let offset = obj.params[1].data;
+    let arg = beamFile.StrT.substring(offset, offset + size);
+
+    return ' "' + arg + '"';
+  }
+};
+
 function instructionToString(beamFile: beamdasm.Beam, obj: any, func: number): string {
   const name = opcodes[obj.op].nm;
   let str = `  ${name}` + ' '.repeat(20 - name.length);
+
+  if (instructionHandlers[name]) {
+    str += instructionHandlers[name](beamFile, obj);
+    return str;
+  }
 
   for (let i = 0; i < opcodes[obj.op].ar; i++) {
     if (i === func) {
