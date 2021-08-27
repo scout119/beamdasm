@@ -105,7 +105,7 @@
     "eslint": "^7.28.0",
     "glob": "^7.1.7",
     "mocha": "^9.0.0",
-    "typescript": "^4.3.2",
+    "typescript": "^4.4.2",
     "vscode-test": "^1.5.2"
   },
   "bugs": {
