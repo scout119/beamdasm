@@ -36,7 +36,8 @@ export default class BeamTreeDataProvider implements vscode.TreeDataProvider<vsc
     //For some reason onDidDelete is not firing when file is deleted outside of VS Code
     if (workspaceRoot && fs.existsSync(workspaceRoot)) {
       //Watcher is not 100% consistent on all platforms     
-      const fsWatcher = fs.watch(workspaceRoot, { recursive: true }, (event: string, filename: string | Buffer) => {
+      let doRecursive = (process.platform !== 'linux');
+      const fsWatcher = fs.watch(workspaceRoot, { recursive: doRecursive }, (event: string, filename: string | Buffer) => {
         const file = (filename instanceof Buffer) ? filename.toString() : filename;
 
         if (path.extname(file) === ".beam") {
