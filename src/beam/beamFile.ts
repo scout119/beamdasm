@@ -140,7 +140,7 @@ export default class BeamFile implements beamdasm.Beam {
       buffer.readUInt8(offset++); //80
 
       buffer.readUInt32BE(offset); offset += 4; //uncompressedSize 
-      const chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
+      const chunk = zlib.inflateSync(buffer.subarray(offset, offset + length) as Uint8Array);
 
       offset = 0;
       const tag = chunk.readUInt8(offset);
@@ -172,7 +172,7 @@ export default class BeamFile implements beamdasm.Beam {
       buffer.readUInt8(offset++); //80
       buffer.readUInt32BE(offset); offset += 4; //uncompressedSize
 
-      const chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
+      const chunk = zlib.inflateSync(buffer.subarray(offset, offset + length) as Uint8Array);
 
 
       offset = 0;
@@ -277,7 +277,7 @@ export default class BeamFile implements beamdasm.Beam {
 
       buffer.readUInt32BE(offset); offset += 4; //uncompressedSize
 
-      const chunk = zlib.inflateSync(buffer.slice(offset, offset + length));
+      const chunk = zlib.inflateSync(buffer.subarray(offset, offset + length) as Uint8Array);
 
       let numValues = chunk.readUInt32BE(0);
 
@@ -657,7 +657,7 @@ export default class BeamFile implements beamdasm.Beam {
       index = 6 + (value >> 4) + (otp20 ? 1 : 0);
     }
 
-    if (index > 11) {
+    if (index > 12) {
       index = Tags.TAG_UNKNOWN;
     }
 
@@ -710,6 +710,20 @@ export default class BeamFile implements beamdasm.Beam {
         offset: offset
       };
     }
+    if (tag === Tags.TAG_EXT_TYPED_REGISTER) {
+      // OTP 25+: typed register {tr, Register, TypeIndex}
+      // Read the register term and type index, return the register
+      const reg = this.readTerm(buffer, offset);
+      offset = reg.offset;
+      const typeIndex = this.readTerm(buffer, offset);
+      offset = typeIndex.offset;
+      return {
+        tag: reg.tag,
+        data: reg.data,
+        offset: offset
+      };
+    }
+
     if (tag === Tags.TAG_EXT_ALLOC_LIST) {
       const size = this.readTerm(buffer, offset);
       offset = size.offset;

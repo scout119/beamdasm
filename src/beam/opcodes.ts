@@ -527,10 +527,90 @@ export const opcodes: any = {
     ar: 1,
     nm: 'recv_marker_use',
     doc: '**recv_marker_use** *Reference*\nSets the current receive cursor to the marker associated with the given Reference.'
+  },
+  // OTP 25
+  177: {
+    ar: 6,
+    nm: 'bs_create_bin',
+    doc: '**bs_create_bin** *Fail* *Alloc* *Live* *Unit* *Dst* *Segments*\nCreate a new binary from a list of segments.'
+  },
+  178: {
+    ar: 3,
+    nm: 'call_fun2',
+    doc: '**call_fun2** *Tag* *Arity* *Fun*\nCall a fun of arity *Arity*.'
+  },
+  179: {
+    ar: 0,
+    nm: 'nif_start',
+    doc: '**nif_start**\nMark the start of a NIF call.'
+  },
+  180: {
+    ar: 1,
+    nm: 'badrecord',
+    doc: '**badrecord** *Value*\nRaise a {badrecord, *Value*} error exception.'
+  },
+  // OTP 26
+  181: {
+    ar: 5,
+    nm: 'update_record',
+    doc: '**update_record** *Hint* *Size* *Src* *Dst* *Updates*\nUpdate a record. *Hint* is whether the record is guaranteed to be updated (reuse) or copied (copy).'
+  },
+  182: {
+    ar: 3,
+    nm: 'bs_match',
+    doc: '**bs_match** *Fail* *Ctx* *Commands*\nPerform a sequence of binary matching commands.'
+  },
+  // OTP 27
+  183: {
+    ar: 2,
+    nm: 'executable_line',
+    doc: '**executable_line** *Index* *Location*\nMark an executable line for code coverage.'
+  },
+  // OTP 28
+  184: {
+    ar: 4,
+    nm: 'debug_line',
+    doc: '**debug_line** *LocationType* *Location* *Item* *Value*\nProvide debug line information.'
+  },
+  185: {
+    ar: 6,
+    nm: 'bif3',
+    doc: '**bif3** *Lbl* *Bif* *Arg1* *Arg2* *Arg3* *Reg*\nCall the built-in function *Bif* with three arguments and store the result in *Reg*. On failure jump to *Lbl*.'
+  },
+  // OTP 29
+  186: {
+    ar: 2,
+    nm: 'is_any_native_record',
+    doc: '**is_any_native_record** *Label* *Arg*\nTest the type of *Arg* and jump to *Label* if it is not a native record.'
+  },
+  187: {
+    ar: 4,
+    nm: 'is_native_record',
+    doc: '**is_native_record** *Label* *Arg* *Name* *Arity*\nTest whether *Arg* is a native record of type *Name*. Jump to *Label* if not.'
+  },
+  188: {
+    ar: 3,
+    nm: 'get_record_elements',
+    doc: '**get_record_elements** *Rec* *Fields* *Destinations*\nExtract the values for each field name in *Fields* from record *Rec*.'
+  },
+  189: {
+    ar: 6,
+    nm: 'put_record',
+    doc: '**put_record** *Hint* *Name* *Arity* *Dst* *Fields* *Values*\nCreate or update a native record.'
+  },
+  190: {
+    ar: 2,
+    nm: 'is_record_accessible',
+    doc: '**is_record_accessible** *Label* *Arg*\nCheck whether the fields of the native record *Arg* are accessible. Jump to *Label* if not.'
+  },
+  191: {
+    ar: 5,
+    nm: 'get_record_field',
+    doc: '**get_record_field** *Label* *Rec* *Name* *Field* *Dst*\nGet a single field *Field* from native record *Rec*. Jump to *Label* on failure.'
   }
 };
 
-export const MAX_OPCODE = 176;
+export const MAX_OPCODE = 191;
 
 export function get_doc(name: string): string {
   for (let opcode = 1; opcode <= MAX_OPCODE; opcode++) {
