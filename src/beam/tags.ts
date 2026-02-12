@@ -27,4 +27,5 @@ export const TAG_EXT_LIST = 8;
 export const TAG_EXT_FLOAT_REGISTER = 9;
 export const TAG_EXT_ALLOC_LIST = 10;
 export const TAG_EXT_LITERAL = 11;
-export const TAG_UNKNOWN = 12;
+export const TAG_EXT_TYPED_REGISTER = 12;
+export const TAG_UNKNOWN = 13;
