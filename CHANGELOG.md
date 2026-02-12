@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## 1.1.6
+- Merged PR #305 to add missing opcodes 177-191 and to handle compact term
 ## 1.1.5
 - Fixed readme not showing media files
 ## 1.1.4
