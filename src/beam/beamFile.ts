@@ -19,6 +19,7 @@ import * as zlib from 'zlib';
 import List from './terms/list';
 import Tuple from './terms/tuple';
 import Map from './terms/map';
+import Binary from './terms/binary';
 
 import { opcodes, MAX_OPCODE } from './opcodes';
 
@@ -275,9 +276,20 @@ export default class BeamFile implements beamdasm.Beam {
       let offset = section.start;
       const length = section.length;
 
-      buffer.readUInt32BE(offset); offset += 4; //uncompressedSize
+      const uncompressedSize = buffer.readUInt32BE(offset); offset += 4;
 
-      const chunk = zlib.inflateSync(buffer.subarray(offset, offset + length) as Uint8Array);
+      let chunk: Buffer;
+
+      if (uncompressedSize === 0) {
+        //Erlang/OTP 28 and later store the literals uncompressed.
+        //A zero word marks the uncompressed format (a valid
+        //uncompressed size can never be zero).
+        chunk = buffer.subarray(offset, offset + length - 4);
+      }
+      else {
+        //Erlang/OTP 27 and earlier store the literals zlib-compressed.
+        chunk = zlib.inflateSync(buffer.subarray(offset, offset + length - 4) as Uint8Array);
+      }
 
       let numValues = chunk.readUInt32BE(0);
 
@@ -437,22 +449,39 @@ export default class BeamFile implements beamdasm.Beam {
       section.name = 'Atoms (AtU8)';
       let offset = section.start;
 
-      let nAtoms = buffer.readUInt32BE(offset);
+      const atomCount = buffer.readInt32BE(offset); offset += 4;
+
+      //Erlang/OTP 28 and later encode the atom count as a negative
+      //number and store each atom length as a tagged variable-sized
+      //value. OTP 27 and earlier use a positive count and single
+      //length byte per atom.
+      const longAtoms = atomCount < 0;
+      let nAtoms = longAtoms ? -atomCount : atomCount;
+
       this.numberOfAtoms = nAtoms;
       if (nAtoms === 0) {
         section.empty = 0;
         return;
       }
 
-      offset += 4;
-
       let maxLength = 0;
 
       while (nAtoms-- > 0) {
-        const atomLength = buffer.readUInt8(offset);
-        const atom = buffer.toString('utf8', offset + 1, offset + 1 + atomLength);
+        let atomLength: number;
+
+        if (longAtoms) {
+          const tagged = this.readTaggedValue(buffer, offset);
+          atomLength = tagged.value;
+          offset = tagged.offset;
+        }
+        else {
+          atomLength = buffer.readUInt8(offset);
+          offset = offset + 1;
+        }
+
+        const atom = buffer.toString('utf8', offset, offset + atomLength);
         maxLength = ( atom.length > maxLength) ? atom.length : maxLength;
-        offset = offset + 1 + atomLength;
+        offset = offset + atomLength;
         this.atoms.push(atom);
       }
 
@@ -523,8 +552,45 @@ export default class BeamFile implements beamdasm.Beam {
         return this.readSmallAtomUtf8(buffer, offset);
       default:
         console.log(`Term: ${tag} is not implmented`);
-        return { data: null };
+        return { data: null, offset: offset };
     }
+  }
+
+  //Decodes a tagged variable-sized value as produced by
+  //beam_asm:encode/2 (Erlang/OTP 28 and later). The three least
+  //significant bits of the first byte hold the tag.
+  readTaggedValue(buffer: Buffer, offset: number): any {
+    const firstByte = buffer.readUInt8(offset++);
+
+    if ((firstByte & 0x18) === 0x18) {
+      let numBytes = firstByte >> 5;
+
+      if (numBytes === 7) {
+        const size = this.readTaggedValue(buffer, offset);
+        offset = size.offset;
+        numBytes = size.value + 9;
+      }
+      else {
+        numBytes += 2;
+      }
+
+      let value = 0;
+
+      for (let i = 0; i < numBytes; i++) {
+        value = value * 256 + buffer.readUInt8(offset + i);
+      }
+
+      return { value: value, offset: offset + numBytes };
+    }
+
+    if ((firstByte & 0x08) !== 0) {
+      return {
+        value: ((firstByte & 0xE0) << 3) | buffer.readUInt8(offset),
+        offset: offset + 1
+      };
+    }
+
+    return { value: firstByte >> 4, offset: offset };
   }
 
   readList(buffer: Buffer, offset: number): any {
@@ -625,12 +691,11 @@ export default class BeamFile implements beamdasm.Beam {
     return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
   }
 
-  //TODO: convert into a byte array instead
   readBinaryText(buffer: Buffer, offset: number): any {
     const length = buffer.readUInt32BE(offset);
     offset += 4;
 
-    return { data: buffer.toString('utf8', offset, offset + length), offset: offset + length };
+    return { data: new Binary(buffer, offset, length), offset: offset + length };
   }
 
   readonly hex: (d: number) => string = (d: number) => ("0" + d.toString(16)).slice(-2).toUpperCase();
