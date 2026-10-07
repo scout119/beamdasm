@@ -1,5 +1,6 @@
 .vscode/**
 .vscode-test/**
+.kilo/**
 releases/**
 out/test/**
 out/**/*.map

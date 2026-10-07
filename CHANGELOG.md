@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added support for the Erlang/OTP 28+ BEAM format: long atom table (negative atom count with tagged variable-sized lengths in AtU8) and uncompressed literals (zero marker in LitT)
+- Fixed binary literals being displayed as garbled text in the Code and Literals sections; binaries are now rendered in Erlang syntax
+- Fixed TypeScript compilation with the eslint 10 dependency updates
 
 ## 1.1.6
 - Merged PR #305 to add missing opcodes 177-191 and to handle compact term
